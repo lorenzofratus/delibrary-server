@@ -1,0 +1,471 @@
+---
+swagger: "2.0"
+info:
+  description: "Delibrary is a place of interaction that encourages the exchange of\
+    \ books between users."
+  version: "1.0.0"
+  title: "Delibrary"
+host: "delibrary.herokuapp.com"
+basePath: "/v1"
+tags:
+- name: "user"
+  description: "Everything about Delibrary users."
+- name: "exchange"
+  description: "Everything about the exchanges of books on Delibrary."
+schemes:
+- "https"
+paths:
+  /users:
+    get:
+      tags:
+      - "user"
+      summary: "Get all Delibrary users."
+      operationId: "getUsers"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        "200":
+          description: "Collection of all Delibrary users."
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/User"
+        default:
+          description: "Unexpected error."
+      x-swagger-router-controller: "User"
+    post:
+      tags:
+      - "user"
+      summary: "Add a new user to Delibrary."
+      operationId: "addUser"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "New user object."
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        "201":
+          description: "User successfully added."
+        "400":
+          description: "Invalid user object."
+        "403":
+          description: "Username already in use."
+        default:
+          description: "Unexpected error."
+      x-swagger-router-controller: "User"
+  /users/{username}:
+    get:
+      tags:
+      - "user"
+      summary: "Get the user with the given username."
+      operationId: "getUserByUsername"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of the user to get."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "User object with the given username."
+          schema:
+            $ref: "#/definitions/User"
+        "400":
+          description: "Invalid username."
+        "404":
+          description: "No user found with the given username."
+        default:
+          description: "Unexpected error."
+      x-swagger-router-controller: "User"
+    put:
+      tags:
+      - "user"
+      summary: "Update the user with the given username."
+      description: "This can only be done by the logged in user."
+      operationId: "updateUser"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of the user to update."
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "Updated version of the user object."
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        "201":
+          description: "User successfully updated."
+        "400":
+          description: "Invalid username or user object."
+        "401":
+          description: "Not authenticated."
+        "404":
+          description: "No user found with the given username."
+        default:
+          description: "Unexpected error."
+      security:
+      - basicAuth: []
+      x-swagger-router-controller: "User"
+  /users/login:
+    get:
+      tags:
+      - "user"
+      summary: "Logs the user into the system."
+      operationId: "loginUser"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "username"
+        in: "query"
+        description: "Username for login."
+        required: true
+        type: "string"
+      - name: "password"
+        in: "query"
+        description: "Password for login IN CLEAR TEXT."
+        required: true
+        type: "string"
+        format: "password"
+      responses:
+        "200":
+          description: "User logged in."
+        "401":
+          description: "Invalid username or password."
+        default:
+          description: "Unexpected error."
+      x-swagger-router-controller: "User"
+  /users/logout:
+    get:
+      tags:
+      - "user"
+      summary: "Logs out current logged in user session."
+      description: "This can only be done by the logged in user."
+      operationId: "logoutUser"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        "200":
+          description: "User logged out."
+        "401":
+          description: "Not authenticated."
+        default:
+          description: "Unexpected error."
+      security:
+      - basicAuth: []
+      x-swagger-router-controller: "User"
+  /users/{username}/exchanges:
+    get:
+      tags:
+      - "exchange"
+      summary: "Get all the exchanges in which the user with the given username is\
+        \ involved."
+      operationId: "getUserExchanges"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of the user whose exchanges are to be obtained."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Collection of exchange objects in which the user is involved."
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Exchange"
+        "400":
+          description: "Invalid username."
+        "404":
+          description: "No user found with the given username."
+        default:
+          description: "Unexpected error."
+      x-swagger-router-controller: "Exchange"
+  /exchanges/{id}:
+    get:
+      tags:
+      - "exchange"
+      summary: "Get the exchange with the given ID."
+      operationId: "getExchange"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the exchange to get."
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Exchange object with the given ID."
+          schema:
+            $ref: "#/definitions/Exchange"
+        "400":
+          description: "Invalid ID."
+        "404":
+          description: "No exchange found with the given ID."
+        default:
+          description: "Unexpected error."
+      x-swagger-router-controller: "Exchange"
+    put:
+      tags:
+      - "exchange"
+      summary: "Update the exchange with the given ID."
+      description: "This can only be done by the logged in user."
+      operationId: "updateExchange"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the exchange to update."
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "body"
+        name: "body"
+        description: "Updated version of the exchange object."
+        required: true
+        schema:
+          $ref: "#/definitions/Exchange"
+      responses:
+        "201":
+          description: "Exchange successfully updated."
+        "400":
+          description: "Invalid ID or exchange object."
+        "401":
+          description: "Not authenticated."
+        "404":
+          description: "No exchange found with the given ID."
+        default:
+          description: "Unexpected error."
+      security:
+      - basicAuth: []
+      x-swagger-router-controller: "Exchange"
+    delete:
+      tags:
+      - "exchange"
+      summary: "Delete the exchange with the given ID."
+      description: "This can only be done by the logged in user."
+      operationId: "deleteExchange"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the exchange to delete."
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "201":
+          description: "Exchange successfully deleted."
+        "400":
+          description: "Invalid ID."
+        "401":
+          description: "Not authenticated."
+        "404":
+          description: "No exchange found with the given ID."
+        default:
+          description: "Unexpected error."
+      security:
+      - basicAuth: []
+      x-swagger-router-controller: "Exchange"
+securityDefinitions:
+  basicAuth:
+    type: "basic"
+definitions:
+  User:
+    type: "object"
+    properties:
+      username:
+        type: "string"
+        example: "nicheosala"
+      email:
+        type: "string"
+        format: "email"
+        example: "example@domain.org"
+      name:
+        type: "string"
+        example: "Nicolò"
+      surname:
+        type: "string"
+        example: "Sala"
+      library:
+        type: "array"
+        items:
+          $ref: "#/definitions/BookOwnership"
+      wishlist:
+        type: "array"
+        items:
+          $ref: "#/definitions/BookWillingness"
+    title: "User"
+    example:
+      library:
+      - ISBN: "1280229045"
+        position:
+          province: "Lecco"
+          city: "Brivio"
+          region: "Lombardia"
+        status: "have"
+      - ISBN: "1280229045"
+        position:
+          province: "Lecco"
+          city: "Brivio"
+          region: "Lombardia"
+        status: "have"
+      surname: "Sala"
+      wishlist:
+      - ISBN: "9780491212489"
+      - ISBN: "9780491212489"
+      name: "Nicolò"
+      email: "example@domain.org"
+      username: "nicheosala"
+  BookOwnership:
+    type: "object"
+    properties:
+      ISBN:
+        type: "string"
+        example: "1280229045"
+        pattern: "/(978)?[0-9]{10}/"
+      owner:
+        $ref: "#/definitions/User"
+      position:
+        $ref: "#/definitions/Position"
+      status:
+        type: "string"
+        enum:
+        - "have"
+        - "am"
+        - "will"
+    title: "Book in library"
+    example:
+      ISBN: "1280229045"
+      position:
+        province: "Lecco"
+        city: "Brivio"
+        region: "Lombardia"
+      status: "have"
+  BookWillingness:
+    type: "object"
+    properties:
+      ISBN:
+        type: "string"
+        example: "9780491212489"
+        pattern: "/(978)?[0-9]{10}/"
+      owner:
+        $ref: "#/definitions/User"
+    title: "Book in wishlist"
+    example:
+      ISBN: "9780491212489"
+  Position:
+    type: "object"
+    properties:
+      region:
+        type: "string"
+        example: "Lombardia"
+      province:
+        type: "string"
+        example: "Lecco"
+      city:
+        type: "string"
+        example: "Brivio"
+    title: "Position"
+    example:
+      province: "Lecco"
+      city: "Brivio"
+      region: "Lombardia"
+  Exchange:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      proposingUser:
+        $ref: "#/definitions/User"
+      respondingUser:
+        $ref: "#/definitions/User"
+      proposedBook:
+        $ref: "#/definitions/BookOwnership"
+      respondedBook:
+        $ref: "#/definitions/BookOwnership"
+      status:
+        type: "string"
+        enum:
+        - "proposed"
+        - "completed"
+    title: "Exchange"
+    example:
+      proposingUser:
+        library:
+        - ISBN: "1280229045"
+          position:
+            province: "Lecco"
+            city: "Brivio"
+            region: "Lombardia"
+          status: "have"
+        - ISBN: "1280229045"
+          position:
+            province: "Lecco"
+            city: "Brivio"
+            region: "Lombardia"
+          status: "have"
+        surname: "Sala"
+        wishlist:
+        - ISBN: "9780491212489"
+        - ISBN: "9780491212489"
+        name: "Nicolò"
+        email: "example@domain.org"
+        username: "nicheosala"
+      respondingUser:
+        library:
+        - ISBN: "1280229045"
+          position:
+            province: "Lecco"
+            city: "Brivio"
+            region: "Lombardia"
+          status: "have"
+        - ISBN: "1280229045"
+          position:
+            province: "Lecco"
+            city: "Brivio"
+            region: "Lombardia"
+          status: "have"
+        surname: "Sala"
+        wishlist:
+        - ISBN: "9780491212489"
+        - ISBN: "9780491212489"
+        name: "Nicolò"
+        email: "example@domain.org"
+        username: "nicheosala"
+      id: 0
+      proposedBook:
+        ISBN: "1280229045"
+        position:
+          province: "Lecco"
+          city: "Brivio"
+          region: "Lombardia"
+        status: "have"
+      respondedBook:
+        ISBN: "1280229045"
+        position:
+          province: "Lecco"
+          city: "Brivio"
+          region: "Lombardia"
+        status: "have"
+      status: "proposed"
