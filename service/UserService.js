@@ -1,5 +1,27 @@
 'use strict';
 
+let sqlDb;
+var utils = require('../utils/writer.js');
+
+exports.usersDbSetup = function (connection) {
+  sqlDb = connection;
+  return sqlDb.schema.hasTable('users').then(exists => {
+    if (!exists) return initUsersTable()
+    else console.log("Table 'users' already exists.")
+  })
+}
+
+function initUsersTable() {
+  console.log("Table 'users' does not exist. Creating it...");
+  var users = sqlDb.schema.createTable("users", table => {
+    table.text('username').primary();
+    table.text('name');
+    table.text('surname');
+    table.text('email');
+  });
+  console.log("Table 'users' created.");
+  return users;
+}
 
 /**
  * Add a new user to Delibrary.
@@ -7,10 +29,100 @@
  * body User New user object.
  * no response value expected for this operation
  **/
-exports.addUser = function(body) {
-  return new Promise(function(resolve, reject) {
-    resolve();
+exports.addUser = function (body) {
+  return new Promise((resolve, reject) => {
+
+    console.log("Adding new user to the database...");
+
+    // TODO check that the operation is authorized
+
+    const username = body['username'];
+    const name = body['name'];
+    const surname = body['surname'];
+    const email = body['email'];
+
+    if (!username) {
+      console.error("User not added: 'username' is empty.")
+      return reject(utils.respondWithCode(400))
+    }
+
+    // TODO check the user object is valid.
+
+    // Check if the username is already used.
+    return sqlDb('users')
+      .where({ username: username })
+      .first().then((user) => {
+        if (user) {
+          console.error("There's already a user with username " + username);
+          return reject(utils.respondWithCode(409))
+        } else {
+          return sqlDb('users').insert({
+            username: username,
+            name: name,
+            surname: surname,
+            email: email
+          }).then(() => {
+            console.log(`User ${username} successfully added to the database.`)
+            return findUser(username)
+              .then((user) => {
+                return resolve(utils.respondWithCode(201, user))
+              }).catch((error) => {
+                console.error("ERROR: " + error)
+                return reject(utils.respondWithCode(500))
+              });
+          }).catch((error) => {
+            console.error("ERROR: " + error)
+            return reject(utils.respondWithCode(500))
+          });
+        }
+      }).catch((error) => console.error(error))
+  })
+}
+
+
+
+/**
+ * Delete the user with the given ID.
+ *
+ * username String username of the user to delete.
+ * no response value expected for this operation
+ **/
+exports.deleteUser = function (username) {
+  return new Promise((resolve, reject) => {
+
+    console.log("Deleting user " + username + " from the database...")
+
+    return findUser(username).then((user) => {
+      if (!user) {
+        console.error("User not found.")
+        return reject(utils.respondWithCode(404))
+      } else {
+        return sqlDb('users')
+          .where({ username: username })
+          .del()
+          .then(() => {
+            console.log("User " + username + " successfully deleted from the database.")
+            return resolve(utils.respondWithCode(200))
+          }).catch((error) => {
+            console.error(error)
+            return reject(utils.respondWithCode(500))
+          })
+      }
+    })
   });
+}
+
+// Return a promise that contains the user with the given username, if it is present inside the database.
+exports.findUser = function (username) {
+  return sqlDb('users')
+    .where({ username: username })
+    .first()
+}
+
+function findUser(username) {
+  return sqlDb('users')
+  .where({ username: username })
+  .first()
 }
 
 
@@ -20,42 +132,24 @@ exports.addUser = function(body) {
  * username String Username of the user to get.
  * returns User
  **/
-exports.getUserByUsername = function(username) {
-  return new Promise(function(resolve, reject) {
-    var examples = {};
-    examples['application/json'] = {
-  "library" : [ {
-    "ISBN" : "1280229045",
-    "position" : {
-      "province" : "Lecco",
-      "city" : "Brivio",
-      "region" : "Lombardia"
-    },
-    "status" : "have"
-  }, {
-    "ISBN" : "1280229045",
-    "position" : {
-      "province" : "Lecco",
-      "city" : "Brivio",
-      "region" : "Lombardia"
-    },
-    "status" : "have"
-  } ],
-  "surname" : "Sala",
-  "wishlist" : [ {
-    "ISBN" : "9780491212489"
-  }, {
-    "ISBN" : "9780491212489"
-  } ],
-  "name" : "Nicolò",
-  "email" : "example@domain.org",
-  "username" : "nicheosala"
-};
-    if (Object.keys(examples).length > 0) {
-      resolve(examples[Object.keys(examples)[0]]);
-    } else {
-      resolve();
-    }
+exports.getUserByUsername = function (username) {
+  return new Promise(function (resolve, reject) {
+
+    console.log("Looking for user " + username)
+
+    return findUser(username).then((user) => {
+      if (!user) {
+        console.log("There are no users with the given username.")
+        return reject(utils.respondWithCode(404))
+      } else {
+        console.log("User " + username + " found.")
+        return resolve(utils.respondWithCode(200, user))
+      }
+    })
+      .catch((error) => {
+        console.error(error)
+        return reject(utils.respondWithCode(500))
+      })
   });
 }
 
@@ -65,96 +159,17 @@ exports.getUserByUsername = function(username) {
  *
  * returns List
  **/
-exports.getUsers = function() {
-  return new Promise(function(resolve, reject) {
-    var examples = {};
-    examples['application/json'] = [ {
-  "library" : [ {
-    "ISBN" : "1280229045",
-    "position" : {
-      "province" : "Lecco",
-      "city" : "Brivio",
-      "region" : "Lombardia"
-    },
-    "status" : "have"
-  }, {
-    "ISBN" : "1280229045",
-    "position" : {
-      "province" : "Lecco",
-      "city" : "Brivio",
-      "region" : "Lombardia"
-    },
-    "status" : "have"
-  } ],
-  "surname" : "Sala",
-  "wishlist" : [ {
-    "ISBN" : "9780491212489"
-  }, {
-    "ISBN" : "9780491212489"
-  } ],
-  "name" : "Nicolò",
-  "email" : "example@domain.org",
-  "username" : "nicheosala"
-}, {
-  "library" : [ {
-    "ISBN" : "1280229045",
-    "position" : {
-      "province" : "Lecco",
-      "city" : "Brivio",
-      "region" : "Lombardia"
-    },
-    "status" : "have"
-  }, {
-    "ISBN" : "1280229045",
-    "position" : {
-      "province" : "Lecco",
-      "city" : "Brivio",
-      "region" : "Lombardia"
-    },
-    "status" : "have"
-  } ],
-  "surname" : "Sala",
-  "wishlist" : [ {
-    "ISBN" : "9780491212489"
-  }, {
-    "ISBN" : "9780491212489"
-  } ],
-  "name" : "Nicolò",
-  "email" : "example@domain.org",
-  "username" : "nicheosala"
-} ];
-    if (Object.keys(examples).length > 0) {
-      resolve(examples[Object.keys(examples)[0]]);
-    } else {
-      resolve();
-    }
-  });
-}
-
-
-/**
- * Logs the user into the system.
- *
- * username String Username for login.
- * password String Password for login IN CLEAR TEXT.
- * no response value expected for this operation
- **/
-exports.loginUser = function(username,password) {
-  return new Promise(function(resolve, reject) {
-    resolve();
-  });
-}
-
-
-/**
- * Logs out current logged in user session.
- * This can only be done by the logged in user.
- *
- * no response value expected for this operation
- **/
-exports.logoutUser = function() {
-  return new Promise(function(resolve, reject) {
-    resolve();
+exports.getUsers = function () {
+  return new Promise(function (resolve, reject) {
+    console.log("Returning all the users inside the database.")
+    return sqlDb('users')
+      .then((users) => {
+        return resolve(utils.respondWithCode(200, users))
+      })
+      .catch((error) => {
+        console.error(error.details)
+        reject(utils.respondWithCode(500))
+      })
   });
 }
 
@@ -167,9 +182,43 @@ exports.logoutUser = function() {
  * body User Updated version of the user object.
  * no response value expected for this operation
  **/
-exports.updateUser = function(username,body) {
-  return new Promise(function(resolve, reject) {
-    resolve();
+exports.updateUser = function (username, body) {
+  return new Promise(function (resolve, reject) {
+
+    console.log("Updating user " + username + "...")
+
+    // 1. TODO check authorizations
+    // 2. check there's a user with the given username
+    return findUser(username).then((user) => {
+      if (!user) {
+        console.log("There is no user with username " + username)
+        return reject(utils.respondWithCode(404))
+      } else {
+        console.log("User " + username + " found. Updating...")
+
+        const name = body['name']
+        const surname = body['surname']
+        const email = body['email']
+
+        // 3. replace user informations
+        return sqlDb('users')
+          .where({ username: username })
+          .update({
+            name: name,
+            surname: surname,
+            email: email
+          }).then(() => {
+            console.log("User " + username + " successfully updated.")
+            return resolve(utils.respondWithCode(201))
+          }).catch((error) => {
+            console.error(error)
+            return reject(utils.respondWithCode(404))
+          })
+      }
+    }).catch((error) => {
+      console.error(error)
+      return reject(utils.respondWithCode(404))
+    })
   });
 }
 

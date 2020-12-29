@@ -1,12 +1,12 @@
 'use strict';
 
 var utils = require('../utils/writer.js');
-var Exchange = require('../service/ExchangeService');
+var Wish = require('../service/WishService');
 
-module.exports.deleteUserExchange = function deleteUserExchange (req, res, next) {
+module.exports.deleteUserWish = function deleteUserWish (req, res, next) {
   var username = req.swagger.params['username'].value;
   var id = req.swagger.params['id'].value;
-  Exchange.deleteUserExchange(username,id)
+  Wish.deleteUserWish(username,id)
     .then(function (response) {
       utils.writeJson(res, response);
     })
@@ -15,10 +15,10 @@ module.exports.deleteUserExchange = function deleteUserExchange (req, res, next)
     });
 };
 
-module.exports.getUserExchange = function getUserExchange (req, res, next) {
+module.exports.getUserWish = function getUserWish (req, res, next) {
   var username = req.swagger.params['username'].value;
   var id = req.swagger.params['id'].value;
-  Exchange.getUserExchange(username,id)
+  Wish.getUserWish(username,id)
     .then(function (response) {
       utils.writeJson(res, response);
     })
@@ -27,9 +27,9 @@ module.exports.getUserExchange = function getUserExchange (req, res, next) {
     });
 };
 
-module.exports.getUserExchanges = function getUserExchanges (req, res, next) {
+module.exports.getUserWishes = function getUserWishes (req, res, next) {
   var username = req.swagger.params['username'].value;
-  Exchange.getUserExchanges(username)
+  Wish.getUserWishes(username)
     .then(function (response) {
       utils.writeJson(res, response);
     })
@@ -38,10 +38,10 @@ module.exports.getUserExchanges = function getUserExchanges (req, res, next) {
     });
 };
 
-module.exports.postUserExchange = function postUserExchange (req, res, next) {
-  var body = req.swagger.params['body'].value;
+module.exports.postUserWish = function postUserWish (req, res, next) {
+  var book = req.swagger.params['book'].value;
   var username = req.swagger.params['username'].value;
-  Exchange.postUserExchange(body,username)
+  Wish.postUserWish(book,username)
     .then(function (response) {
       utils.writeJson(res, response);
     })

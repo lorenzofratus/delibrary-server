@@ -1,12 +1,12 @@
 'use strict';
 
 var utils = require('../utils/writer.js');
-var Exchange = require('../service/ExchangeService');
+var Property = require('../service/PropertyService');
 
-module.exports.deleteUserExchange = function deleteUserExchange (req, res, next) {
+module.exports.deleteUserProperty = function deleteUserProperty (req, res, next) {
   var username = req.swagger.params['username'].value;
   var id = req.swagger.params['id'].value;
-  Exchange.deleteUserExchange(username,id)
+  Property.deleteUserProperty(username,id)
     .then(function (response) {
       utils.writeJson(res, response);
     })
@@ -15,10 +15,21 @@ module.exports.deleteUserExchange = function deleteUserExchange (req, res, next)
     });
 };
 
-module.exports.getUserExchange = function getUserExchange (req, res, next) {
+module.exports.getUserProperties = function getUserProperties (req, res, next) {
+  var username = req.swagger.params['username'].value;
+  Property.getUserProperties(username)
+    .then(function (response) {
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, response);
+    });
+};
+
+module.exports.getUserProperty = function getUserProperty (req, res, next) {
   var username = req.swagger.params['username'].value;
   var id = req.swagger.params['id'].value;
-  Exchange.getUserExchange(username,id)
+  Property.getUserProperty(username,id)
     .then(function (response) {
       utils.writeJson(res, response);
     })
@@ -27,21 +38,10 @@ module.exports.getUserExchange = function getUserExchange (req, res, next) {
     });
 };
 
-module.exports.getUserExchanges = function getUserExchanges (req, res, next) {
+module.exports.postUserProperty = function postUserProperty (req, res, next) {
+  var book = req.swagger.params['book'].value;
   var username = req.swagger.params['username'].value;
-  Exchange.getUserExchanges(username)
-    .then(function (response) {
-      utils.writeJson(res, response);
-    })
-    .catch(function (response) {
-      utils.writeJson(res, response);
-    });
-};
-
-module.exports.postUserExchange = function postUserExchange (req, res, next) {
-  var body = req.swagger.params['body'].value;
-  var username = req.swagger.params['username'].value;
-  Exchange.postUserExchange(body,username)
+  Property.postUserProperty(book,username)
     .then(function (response) {
       utils.writeJson(res, response);
     })

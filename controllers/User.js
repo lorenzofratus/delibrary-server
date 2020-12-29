@@ -14,6 +14,17 @@ module.exports.addUser = function addUser (req, res, next) {
     });
 };
 
+module.exports.deleteUser = function deleteUser (req, res, next) {
+  var username = req.swagger.params['username'].value;
+  User.deleteUser(username)
+    .then(function (response) {
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, response);
+    });
+};
+
 module.exports.getUserByUsername = function getUserByUsername (req, res, next) {
   var username = req.swagger.params['username'].value;
   User.getUserByUsername(username)
@@ -27,28 +38,6 @@ module.exports.getUserByUsername = function getUserByUsername (req, res, next) {
 
 module.exports.getUsers = function getUsers (req, res, next) {
   User.getUsers()
-    .then(function (response) {
-      utils.writeJson(res, response);
-    })
-    .catch(function (response) {
-      utils.writeJson(res, response);
-    });
-};
-
-module.exports.loginUser = function loginUser (req, res, next) {
-  var username = req.swagger.params['username'].value;
-  var password = req.swagger.params['password'].value;
-  User.loginUser(username,password)
-    .then(function (response) {
-      utils.writeJson(res, response);
-    })
-    .catch(function (response) {
-      utils.writeJson(res, response);
-    });
-};
-
-module.exports.logoutUser = function logoutUser (req, res, next) {
-  User.logoutUser()
     .then(function (response) {
       utils.writeJson(res, response);
     })

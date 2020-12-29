@@ -8,6 +8,7 @@ exports.respondWithCode = function(code, payload) {
 }
 
 var writeJson = exports.writeJson = function(response, arg1, arg2) {
+
   var code;
   var payload;
 
@@ -31,13 +32,26 @@ var writeJson = exports.writeJson = function(response, arg1, arg2) {
     payload = arg1;
   }
 
-  if(!code) {
-    // if no response code given, we default to 200
-    code = 200;
-  }
-  if(typeof payload === 'object') {
-    payload = JSON.stringify(payload, null, 2);
-  }
+  if(code != 200 && code != 201)
+    payload = getErrorObject(code)
+  
+  payload = JSON.stringify(payload, null, 4);
   response.writeHead(code, {'Content-Type': 'application/json'});
   response.end(payload);
+}
+
+
+function getErrorObject(code) {
+  switch (code) {
+    case 400:
+      return {"code": "400", "title": "Bad Request", "description" : "The server could not understand the request due to invalid syntax."}
+    case 401:
+      return {"code": "401", "title": "Unauthenticated", "description" : "The client must authenticate itself to get the requested response."}
+    case 404:
+      return {"code": "404", "title": "Not found", "description" : "The server can not find the requested resource."}
+    case 409:      
+      return {"code": "409", "title": "Conflict", "description" : "This response is sent when a request conflicts with the current state of the server."}
+    default:
+      return {"code": "500", "title": "Internal server error", "description": "The server has encountered a situation it doesn't know how to handle."}
+  }
 }
