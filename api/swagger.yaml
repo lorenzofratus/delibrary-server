@@ -5,7 +5,7 @@ info:
     \ books between users."
   version: "1.0.0"
   title: "Delibrary"
-host: "delibrary.herokuapp.com"
+host: localhost:8080
 basePath: "/v1"
 tags:
 - name: "User"
@@ -17,7 +17,7 @@ tags:
 - name: "Exchange"
   description: "All the operations for managing users' exchanges"
 schemes:
-- "https"
+- "http"
 paths:
   /users:
     get:
@@ -36,7 +36,7 @@ paths:
             items:
               $ref: "#/definitions/User"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "User"
@@ -61,7 +61,7 @@ paths:
           schema:
             $ref: "#/definitions/User"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "400":
           $ref: "#/responses/BadRequest"
         "409":
@@ -89,7 +89,7 @@ paths:
           schema:
             $ref: "#/definitions/User"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
         "500":
@@ -121,7 +121,7 @@ paths:
           schema:
             $ref: "#/definitions/User"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
         "500":
@@ -142,7 +142,7 @@ paths:
         "200":
           description: "User successfully deleted."
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
         "500":
@@ -172,7 +172,7 @@ paths:
         "400":
           $ref: "#/responses/BadRequest"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Wish"
@@ -186,7 +186,7 @@ paths:
       - "application/json"
       parameters:
       - in: "body"
-        name: "book"
+        name: "Book"
         description: "The newly-wished book."
         required: true
         schema:
@@ -202,7 +202,7 @@ paths:
           schema:
             $ref: "#/definitions/Wish"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "400":
           $ref: "#/responses/BadRequest"
         "409":
@@ -236,7 +236,7 @@ paths:
           schema:
             $ref: "#/definitions/Wish"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
         "500":
@@ -263,7 +263,7 @@ paths:
         "200":
           description: "Wish successfully deleted."
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
         "500":
@@ -293,7 +293,7 @@ paths:
         "400":
           $ref: "#/responses/BadRequest"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Property"
@@ -328,7 +328,7 @@ paths:
           schema:
             $ref: "#/definitions/Property"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "400":
           $ref: "#/responses/BadRequest"
         "409":
@@ -362,7 +362,7 @@ paths:
           schema:
             $ref: "#/definitions/Property"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
         "500":
@@ -389,17 +389,73 @@ paths:
         "200":
           description: "Property successfully deleted."
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Property"
+  /users/{sellerUsername}/exchanges/seller:
+    get:
+      tags:
+      - "Exchange"
+      summary: "Get all the exchanges where the user is a seller."
+      operationId: "getUserExchangesSeller"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "sellerUsername"
+        in: "path"
+        description: "Username of the seller whose exchanges have to be obtained."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Collection of exchanges of the seller."
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Exchange"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "Exchange"
+  /users/{buyerUsername}/exchanges/buyer:
+    get:
+      tags:
+      - "Exchange"
+      summary: "Get all the exchanges where the user is a buyer."
+      operationId: "getUserExchangesBuyer"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "buyerUsername"
+        in: "path"
+        description: "Username of the buyer whose exchanges have to be obtained."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Collection of exchanges of the buyer."
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Exchange"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "Exchange"
   /users/{username}/exchanges:
     get:
       tags:
       - "Exchange"
-      summary: "Get all the exchanges where the buyer is involved."
+      summary: "Get all the exchanges where the user is involved: he/she can be the seller or the buyer."
       operationId: "getUserExchanges"
       produces:
       - "application/json"
@@ -419,15 +475,16 @@ paths:
         "400":
           $ref: "#/responses/BadRequest"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
-  /users/{username}/exchanges/new:
+  /users/{buyerUsername}/exchanges/new:
     post:
       tags:
       - "Exchange"
-      summary: "Add a exchange for the buyer with the given username."
+      summary: "Add an exchange for the buyer with the given username."
+      description: "This operation can only be done by the logged-in buyer. If the database does not already contain an exchange with the given (buyer username, seller username, seller book), then a new Exchange object is created, with a unique ID, and it is returned as result of the POST request. The initial state of the exchange is 'proposed'."
       operationId: "postUserExchange"
       produces:
       - "application/json"
@@ -443,7 +500,7 @@ paths:
               type: string
             bookId:
               type: integer
-      - name: "username"
+      - name: "buyerUsername"
         in: "path"
         description: "Username of the buyer."
         required: true
@@ -454,7 +511,7 @@ paths:
           schema:
             $ref: "#/definitions/Exchange"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "400":
           $ref: "#/responses/BadRequest"
         "409":
@@ -462,7 +519,7 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
-  /users/{username}/exchanges/{id}:
+  /users/{buyerUsername}/exchanges/{id}:
     get:
       tags:
       - "Exchange"
@@ -471,7 +528,7 @@ paths:
       produces:
       - "application/json"
       parameters:
-      - name: "username"
+      - name: "buyerUsername"
         in: "path"
         description: "Username of the buyer."
         required: true
@@ -488,7 +545,7 @@ paths:
           schema:
             $ref: "#/definitions/Exchange"
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
         "500":
@@ -500,7 +557,7 @@ paths:
       summary: "Delete the exchange of the buyer with the given ID."
       operationId: "deleteUserExchange"
       parameters:
-      - name: "username"
+      - name: "buyerUsername"
         in: "path"
         description: "Username of the buyer."
         required: true
@@ -515,7 +572,114 @@ paths:
         "200":
           description: "Exchange successfully deleted."
         "401":
-          $ref: "#/responses/Unauthorized"
+          $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "Exchange"
+  /users/{sellerUsername}/exchanges/{id}/refuse:
+    put:
+      tags:
+      - "Exchange"
+      summary: "The seller refuses the exchange proposed by the buyer."
+      description: "This can only be done by the logged-in seller on an exchange whose state is 'proposed'."
+      operationId: "refuseExchange"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "sellerUsername"
+        in: "path"
+        description: "Username of the seller that wants to refuse the exchange."
+        required: true
+        type: "string"
+      - name: "id"
+        in: "path"
+        description: "The id of the exchange that has to be updated."
+        required: true
+        type: "integer"
+      responses:
+        "201":
+          description: "Exchange successfully refused."
+          schema:
+            $ref: "#/definitions/Exchange"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "Exchange"
+  /users/{sellerUsername}/exchanges/{id}/agree:
+    put:
+      tags:
+      - "Exchange"
+      summary: "The seller agrees with the exchange proposed by the buyer."
+      description: "This can only be done by the logged-in seller on an exchange whose state is 'proposed'."
+      operationId: "agreeExchange"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "sellerUsername"
+        in: "path"
+        description: "Username of the seller that wants to accept the exchange."
+        required: true
+        type: "string"
+      - name: "id"
+        in: "path"
+        description: "The id of the exchange that has to be updated."
+        required: true
+        type: "integer"
+      - name: "book"
+        in: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/Book"
+      responses:
+        "201":
+          description: "Exchange successfully accepted."
+          schema:
+            $ref: "#/definitions/Exchange"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "Exchange"
+  /users/{username}/exchanges/{id}/happen:
+    put:
+      tags:
+      - "Exchange"
+      summary: "A user involved in the exchange with the given ID marks it as 'happened'."
+      description: "This can only be done by the logged-in seller OR the logged-in buyer on an exchange whose state is 'proposed'."
+      operationId: "happenedExchange"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of the seller or of the buyer."
+        required: true
+        type: "string"
+      - name: "id"
+        in: "path"
+        description: "The id of the exchange that has to be updated."
+        required: true
+        type: "integer"
+      responses:
+        "201":
+          description: "Exchange successfully marked as 'happened'."
+          schema:
+            $ref: "#/definitions/Exchange"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
         "500":
@@ -537,6 +701,9 @@ definitions:
       email:
         type: "string"
         example: "example@domain.org"
+      password:
+        type: "string"
+        example: "veryStrongPassword"
     title: "User"
     description: "A user of Delibrary"
     example:
@@ -544,6 +711,7 @@ definitions:
       name: "Nicolò"
       email: "example@domain.org"
       username: "nicheosala"
+      password: "veryStrongPassword"
   Wish:
     type: "object"
     properties:
@@ -607,6 +775,7 @@ definitions:
       city: "Brivio"
       region: "Lombardia"
   Exchange:
+    description: "An exchange is an object that represents the exchange of books between two Delibrary users. Conventionally, we call 'buyer' the user that proposes the exchange, while we call 'seller' the user that receives the exchange offer. This semantics was chosen to make it easy to describe the interaction between the two users."
     type: "object"
     properties:
       id:
@@ -642,6 +811,7 @@ definitions:
     properties:
       code:
         type: "integer"
+        enum: [400, 401, 403, 404, 409, 500]
       title:
         type: "string"
       description:
@@ -659,7 +829,7 @@ responses:
     description: "The server could not understand the request due to invalid syntax."
     schema:
       $ref: "#/definitions/Error"
-  Unauthorized:
+  Unauthenticated:
     description: "The client must authenticate itself to get the requested response."
     schema:
       $ref: "#/definitions/Error"

@@ -14,10 +14,11 @@ exports.usersDbSetup = function (connection) {
 function initUsersTable() {
   console.log("Table 'users' does not exist. Creating it...");
   var users = sqlDb.schema.createTable("users", table => {
-    table.text('username').primary();
-    table.text('name');
-    table.text('surname');
-    table.text('email');
+    table.string('username').primary();
+    table.string('name');
+    table.string('surname');
+    table.string('email').notNullable();
+    table.string('password').notNullable();
   });
   console.log("Table 'users' created.");
   return users;
@@ -40,13 +41,12 @@ exports.addUser = function (body) {
     const name = body['name'];
     const surname = body['surname'];
     const email = body['email'];
+    const password = body['password'];
 
-    if (!username) {
-      console.error("User not added: 'username' is empty.")
+    if (!username || !password || ! email) {
+      console.error("User not added: non-nullable field is empty.")
       return reject(utils.respondWithCode(400))
     }
-
-    // TODO check the user object is valid.
 
     // Check if the username is already used.
     return sqlDb('users')
@@ -60,12 +60,13 @@ exports.addUser = function (body) {
             username: username,
             name: name,
             surname: surname,
-            email: email
+            email: email,
+            password: password
           }).then(() => {
             console.log(`User ${username} successfully added to the database.`)
             return findUser(username)
               .then((user) => {
-                return resolve(utils.respondWithCode(201, user))
+                return resolve(utils.respondWithCode(201, hidePassword(user)))
               }).catch((error) => {
                 console.error("ERROR: " + error)
                 return reject(utils.respondWithCode(500))
@@ -79,7 +80,11 @@ exports.addUser = function (body) {
   })
 }
 
-
+function hidePassword(user) {
+  let userWithoutPassword = user;
+  userWithoutPassword['password'] = null;
+  return userWithoutPassword;
+}
 
 /**
  * Delete the user with the given ID.
@@ -121,8 +126,8 @@ exports.findUser = function (username) {
 
 function findUser(username) {
   return sqlDb('users')
-  .where({ username: username })
-  .first()
+    .where({ username: username })
+    .first()
 }
 
 
@@ -143,7 +148,7 @@ exports.getUserByUsername = function (username) {
         return reject(utils.respondWithCode(404))
       } else {
         console.log("User " + username + " found.")
-        return resolve(utils.respondWithCode(200, user))
+        return resolve(utils.respondWithCode(200, hidePassword(user)))
       }
     })
       .catch((error) => {
@@ -164,7 +169,7 @@ exports.getUsers = function () {
     console.log("Returning all the users inside the database.")
     return sqlDb('users')
       .then((users) => {
-        return resolve(utils.respondWithCode(200, users))
+        return resolve(utils.respondWithCode(200, users.map(hidePassword)))
       })
       .catch((error) => {
         console.error(error.details)
@@ -208,8 +213,14 @@ exports.updateUser = function (username, body) {
             surname: surname,
             email: email
           }).then(() => {
-            console.log("User " + username + " successfully updated.")
-            return resolve(utils.respondWithCode(201))
+            return sqlDb('users').where({ username: username }).first()
+              .then((user) => {
+                console.log("User " + username + " successfully updated.")
+                return resolve(utils.respondWithCode(201, hidePassword(user)))
+              }).catch(error) ((error) => {
+                console.error(error)
+                return reject(utils.respondWithCode(404))
+              })
           }).catch((error) => {
             console.error(error)
             return reject(utils.respondWithCode(404))

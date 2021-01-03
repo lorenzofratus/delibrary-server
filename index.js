@@ -1,10 +1,10 @@
 'use strict';
 
 var fs = require('fs'),
-    path = require('path'),
-    http = require('http');
+  path = require('path'),
+  http = require('http');
 
-var app = require('connect')();
+var app = require('express')();
 var swaggerTools = require('swagger-tools');
 var jsyaml = require('js-yaml');
 const { setupDataLayer } = require('./service/DataLayer');
@@ -20,7 +20,7 @@ var options = {
 };
 
 // The Swagger document (require it, build it programmatically, fetch it from a URL, ...)
-var spec = fs.readFileSync(path.join(__dirname,'api/swagger.yaml'), 'utf8');
+var spec = fs.readFileSync(path.join(__dirname, 'api/swagger.yaml'), 'utf8');
 var swaggerDoc = jsyaml.safeLoad(spec);
 
 // Initialize the Swagger middleware
@@ -41,6 +41,6 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
   // Start the server
   setupDataLayer().then(
     () => http.createServer(app).listen(port, () =>
-    console.log(`Listening on port ${port}`))
+      console.log(`Listening on port ${port}`))
   )
 });

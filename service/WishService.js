@@ -16,8 +16,8 @@ function initWishesTable() {
   console.log("Table 'wishes' does not exist. Creating it...");
   var wishes = sqlDb.schema.createTable("wishes", table => {
     table.increments('id').primary();
-    table.text('user').notNullable();
-    table.text('bookId').notNullable();
+    table.string('user').notNullable();
+    table.string('bookId').notNullable();
     table.foreign('user').references("users.username").onDelete('CASCADE');
   });
   console.log("Table 'wishes' created.");

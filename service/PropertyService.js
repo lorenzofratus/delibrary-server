@@ -16,12 +16,12 @@ function initInterestsTable() {
   console.log("Table 'properties' does not exist. Creating it...");
   var properties = sqlDb.schema.createTable("properties", table => {
     table.increments('id').primary();
-    table.text('owner').notNullable();
+    table.string('owner').notNullable();
     table.foreign('owner').references('username').inTable('users').onDelete('CASCADE');
-    table.text('bookId').notNullable();
-    table.text('region').notNullable();
-    table.text("city").notNullable();
-    table.text("province").notNullable();
+    table.string('bookId').notNullable();
+    table.string('region').notNullable();
+    table.string("city").notNullable();
+    table.string("province").notNullable();
   });
   console.log("Table 'properties' created.");
   return properties;
