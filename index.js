@@ -9,8 +9,26 @@ var swaggerTools = require('swagger-tools');
 var jsyaml = require('js-yaml');
 const { setupDataLayer } = require('./service/DataLayer');
 
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const sessionLogger = require('./middlewares/SessionLogger')
+
 var port = process.env.PORT || 8080;
 
+// Session configuration
+app.use(cookieParser());
+app.use(session({
+  name: 'sid',
+  secret: 'super secret password',
+  saveUninitialized: false,
+  resave: false,
+  cookie: {
+    secure: false,        //Needs HTTPS to be true
+    httpOnly: false,
+    maxAge: null,         //The cookie doesn't expire
+  }
+}))
+app.use(sessionLogger);   //Displays the session at each request, for debugging purposes
 
 // swaggerRouter configuration
 var options = {
@@ -44,3 +62,5 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
       console.log(`Listening on port ${port}`))
   )
 });
+
+module.exports = http;
