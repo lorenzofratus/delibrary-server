@@ -43,7 +43,7 @@ exports.deleteUserProperty = function (username, id) {
         return reject(utils.respondWithCode(404))
       } else {
         sqlDb('properties')
-          .where({ user: username, id: id })
+          .where({ owner: username, id: id })
           .first()
           .then((user) => {
             if (!user) {
@@ -117,7 +117,7 @@ exports.getUserProperty = function (username, id) {
         return reject(utils.respondWithCode(404))
       } else {
         return sqlDb('properties')
-          .where({ user: username, id: id })
+          .where({ owner: username, id: id })
           .first()
           .then((property) => {
             if (!property) {

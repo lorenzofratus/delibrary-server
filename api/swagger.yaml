@@ -757,10 +757,10 @@ definitions:
         type: "string"
       bookId:
         type: "string"
-        example: "9780491212489"
+        example: "MNOPWJTvuxoC"
     title: "Wish"
     example:
-      bookId: "9780491212489"
+      bookId: "MNOPWJTvuxoC"
       id: 0
       username: "nicheosala"
   Property:
@@ -773,13 +773,13 @@ definitions:
         type: "string"
       bookId:
         type: "string"
-        example: "9780491212489"
+        example: "MNOPWJTvuxoC"
       position:
         $ref: "#/definitions/Position"
     title: "Property"
     example:
       owner: "nicheosala"
-      bookId: "9780491212489"
+      bookId: "MNOPWJTvuxoC"
       id: 0
       position:
         province: "Lecco"
@@ -789,7 +789,7 @@ definitions:
     properties:
       bookId:
         type: "string"
-        example: "9780491212489"
+        example: "MNOPWJTvuxoC"
     title: "Book"
   Position:
     type: "object"
