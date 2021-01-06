@@ -5,7 +5,6 @@ info:
     \ books between users."
   version: "1.0.0"
   title: "Delibrary"
-host: localhost:8080
 basePath: "/v1"
 tags:
 - name: "User"
@@ -16,8 +15,7 @@ tags:
   description: "All the operations for managing users' properties"
 - name: "Exchange"
   description: "All the operations for managing users' exchanges"
-schemes:
-- "http"
+
 paths:
   /users:
     get:
