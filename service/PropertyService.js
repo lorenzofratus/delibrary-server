@@ -151,11 +151,11 @@ exports.postUserProperty = function (body, username) {
 
     // TODO check that the operation is authorized
     const book = body['book'];
-    const position = body['position']
+    const position = body['position'];
     const user = username;
     const bookId = book['bookId'];
-    const province = position['province'];
-    const town = position['town'];
+    const province = position['province'].toLowerCase();
+    const town = position['town'].toLowerCase();
 
     if (!user || !bookId || !town || !province) {
       console.error("Property not added: not nullable field is empty.")
