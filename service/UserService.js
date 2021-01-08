@@ -43,7 +43,7 @@ exports.addUser = function (body) {
     const email = body['email'];
     const password = body['password'];
 
-    if (!username || !password || ! email) {
+    if (!username || !password || !email) {
       console.error("User not added: non-nullable field is empty.")
       return reject(utils.respondWithCode(400))
     }
@@ -169,6 +169,10 @@ exports.getUsers = function () {
     console.log("Returning all the users inside the database.")
     return sqlDb('users')
       .then((users) => {
+        if (!users) {
+          console.log("There are no users.")
+          return reject(utils.respondWithCode(404))
+        }
         return resolve(utils.respondWithCode(200, users.map(hidePassword)))
       })
       .catch((error) => {
@@ -217,7 +221,7 @@ exports.updateUser = function (username, body) {
               .then((user) => {
                 console.log("User " + username + " successfully updated.")
                 return resolve(utils.respondWithCode(201, hidePassword(user)))
-              }).catch(error) ((error) => {
+              }).catch(error)((error) => {
                 console.error(error)
                 return reject(utils.respondWithCode(404))
               })

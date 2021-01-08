@@ -85,6 +85,10 @@ exports.getUserProperties = function (username) {
         return sqlDb('properties')
           .where({ owner: username })
           .then((properties) => {
+            if(!properties) {
+              console.log("No properties for user " + username);
+              return reject(utils.respondWithCode(404))
+            }
             return resolve(utils.respondWithCode(200, properties))
           })
           .catch((error) => {

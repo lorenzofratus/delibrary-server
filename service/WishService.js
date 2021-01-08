@@ -112,7 +112,12 @@ exports.getUserWishes = function (username) {
           return sqlDb('wishes')
             .where({ user: username })
             .then((wishes) => {
-              return resolve(utils.respondWithCode(200, wishes))
+              if (!wishes) {
+                console.log("No wishes for user " + username);
+                return reject(utils.respondWithCode(404));
+              }
+              console.log("Wishes found.")
+              return resolve(utils.respondWithCode(200, wishes));
             })
             .catch((error) => {
               console.error(error)

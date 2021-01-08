@@ -125,7 +125,12 @@ exports.getUserExchanges = function (username) {
           .where({ buyer: username })
           .orWhere({ seller: username })
           .then((exchanges) => {
-            return resolve(utils.respondWithCode(200, exchanges))
+            if(!exchanges) {
+              console.log("No exchanges found for user " + username);
+              return reject(utils.respondWithCode(404));
+            }
+            console.log("Exchanges found for user " + username);
+            return resolve(utils.respondWithCode(200, exchanges));
           })
           .catch((error) => {
             console.error(error)
@@ -376,7 +381,12 @@ exports.getUserExchangesSeller = function getUserExchangesSeller(sellerUsername)
         return sqlDb('exchanges')
           .where({ seller: sellerUsername })
           .then((exchanges) => {
-            return resolve(utils.respondWithCode(200, exchanges))
+            if(!exchanges) {
+              console.log("No exchanges found with user " + username + " as seller.");
+              return reject(utils.respondWithCode(404));
+            }
+            console.log("Exchanges found with user " + username + " as seller.");
+            return resolve(utils.respondWithCode(200, exchanges));
           })
           .catch((error) => {
             console.error(error)
@@ -402,6 +412,11 @@ exports.getUserExchangesBuyer = function getUserExchangesBuyer(buyerUsername) {
         return sqlDb('exchanges')
           .where({ buyer: buyerUsername })
           .then((exchanges) => {
+            if(!exchanges) {
+              console.log("No exchanges found with user " + username + "as buyer.");
+              return reject(utils.respondWithCode(404));
+            }
+            console.log("Exchanges found with user " + username + " as buyer.");
             return resolve(utils.respondWithCode(200, exchanges))
           })
           .catch((error) => {
