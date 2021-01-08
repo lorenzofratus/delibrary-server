@@ -215,7 +215,7 @@ exports.postUserProperty = function (body, username) {
  * town String The name of the town of interest.
  * returns List
  **/
-exports.getPropertiesByPosition = function (province, town) {
+exports.getPropertiesByTown = function (province, town) {
   return new Promise(function (resolve, reject) {
 
     console.log("Retrieving properties in province: " + province + ", town: " + town + "...");
@@ -225,10 +225,47 @@ exports.getPropertiesByPosition = function (province, town) {
       return reject(utils.respondWithCode(400))
     }
 
+    province = province.toLowerCase();
+    town = town.toLowerCase();
+
     return sqlDb('properties').where({ province: province, town: town })
       .then(properties => {
         if (!properties) {
           console.log("No properties found in the given town.");
+          return reject(utils.respondWithCode(404));
+        } else {
+          console.log("Properites found.");
+          return resolve(utils.respondWithCode(200, properties));
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        return reject(utils.respondWithCode(500));
+      })
+  });
+}
+
+/**
+ * Get all the properties in a given province.
+ *
+ * province String The name of the province of interest.
+ * returns List
+ **/
+exports.getPropertiesByProvince = function (province) {
+  return new Promise(function (resolve, reject) {
+    console.log("Retrieving properties in province: " + province + "...");
+
+    if (!province) {
+      console.error("Province cannot be null.");
+      return reject(utils.respondWithCode(400))
+    }
+
+    province = province.toLowerCase();
+
+    return sqlDb('properties').where({ province: province })
+      .then(properties => {
+        if (!properties) {
+          console.log("No properties found in the given province.");
           return reject(utils.respondWithCode(404));
         } else {
           console.log("Properites found.");

@@ -304,12 +304,42 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Wish"
+  /properties/{province}:
+    get:
+      tags:
+      - "Property"
+      summary: "Get all the properties in a given province."
+      operationId: "getPropertiesByProvince"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "province"
+        in: "path"
+        description: "The name of the province of interest."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Collection of properties placed in the given province."
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Property"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "Property"
   /properties/{province}/{town}:
     get:
       tags:
       - "Property"
       summary: "Get all the properties in a given town."
-      operationId: "getPropertiesByPosition"
+      operationId: "getPropertiesByTown"
       produces:
       - "application/json"
       parameters:
