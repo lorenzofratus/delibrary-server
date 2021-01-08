@@ -17,6 +17,43 @@ tags:
   description: "All the operations for managing users' exchanges"
 
 paths:
+  /user/login:
+    get:
+      tags:
+      - "User"
+      summary: "Logs user into the system."
+      operationId: "loginUser"
+      parameters:
+      - name: "username"
+        in: "query"
+        description: "The user name for login"
+        required: true
+        type: "string"
+      - name: "password"
+        in: "query"
+        description: "The password for login in clear text"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "500":
+          $ref: "#/responses/ServerError"
+  /user/logout:
+    get:
+      tags:
+      - "User"
+      summary: "Logs out current logged in user session"
+      operationId: "logoutUser"
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "500":
+          $ref: "#/responses/ServerError"
   /users:
     get:
       tags:
