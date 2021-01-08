@@ -5,7 +5,6 @@ info:
     \ books between users."
   version: "1.0.0"
   title: "Delibrary"
-host: localhost:8080
 basePath: "/v1"
 tags:
 - name: "User"
@@ -16,8 +15,7 @@ tags:
   description: "All the operations for managing users' properties"
 - name: "Exchange"
   description: "All the operations for managing users' exchanges"
-schemes:
-- "http"
+
 paths:
   /users:
     get:
@@ -269,6 +267,41 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Wish"
+  /properties/{province}/{town}:
+    get:
+      tags:
+      - "Property"
+      summary: "Get all the properties in a given town."
+      operationId: "getPropertiesByPosition"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "province"
+        in: "path"
+        description: "The name of the province where the town of interest is placed."
+        required: true
+        type: "string"
+      - name: "town"
+        in: "path"
+        description: "The name of the town of interest."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Collection of properties placed in the given town."
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Property"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "Property"
   /users/{username}/properties:
     get:
       tags:
@@ -722,10 +755,10 @@ definitions:
         type: "string"
       bookId:
         type: "string"
-        example: "9780491212489"
+        example: "MNOPWJTvuxoC"
     title: "Wish"
     example:
-      bookId: "9780491212489"
+      bookId: "MNOPWJTvuxoC"
       id: 0
       username: "nicheosala"
   Property:
@@ -738,42 +771,37 @@ definitions:
         type: "string"
       bookId:
         type: "string"
-        example: "9780491212489"
+        example: "MNOPWJTvuxoC"
       position:
         $ref: "#/definitions/Position"
     title: "Property"
     example:
       owner: "nicheosala"
-      bookId: "9780491212489"
+      bookId: "MNOPWJTvuxoC"
       id: 0
       position:
         province: "Lecco"
-        city: "Brivio"
-        region: "Lombardia"
+        town: "Brivio"
   Book:
     type: "object"
     properties:
       bookId:
         type: "string"
-        example: "9780491212489"
+        example: "MNOPWJTvuxoC"
     title: "Book"
   Position:
     type: "object"
     properties:
-      region:
-        type: "string"
-        example: "Lombardia"
       province:
         type: "string"
         example: "Lecco"
-      city:
+      town:
         type: "string"
         example: "Brivio"
     title: "Position"
     example:
       province: "Lecco"
-      city: "Brivio"
-      region: "Lombardia"
+      town: "Brivio"
   Exchange:
     description: "An exchange is an object that represents the exchange of books between two Delibrary users. Conventionally, we call 'buyer' the user that proposes the exchange, while we call 'seller' the user that receives the exchange offer. This semantics was chosen to make it easy to describe the interaction between the two users."
     type: "object"

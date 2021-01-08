@@ -49,3 +49,15 @@ module.exports.postUserProperty = function postUserProperty (req, res, next) {
       utils.writeJson(res, response);
     });
 };
+
+module.exports.getPropertiesByPosition = function getPropertiesByPosition (req, res, next) {
+  var province = req.swagger.params['province'].value;
+  var town = req.swagger.params['town'].value;
+  Property.getPropertiesByPosition(province,town)
+    .then(function (response) {
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, response);
+    });
+};

@@ -19,8 +19,7 @@ function initInterestsTable() {
     table.string('owner').notNullable();
     table.foreign('owner').references('username').inTable('users').onDelete('CASCADE');
     table.string('bookId').notNullable();
-    table.string('region').notNullable();
-    table.string("city").notNullable();
+    table.string('town').notNullable();
     table.string("province").notNullable();
   });
   console.log("Table 'properties' created.");
@@ -44,7 +43,7 @@ exports.deleteUserProperty = function (username, id) {
         return reject(utils.respondWithCode(404))
       } else {
         sqlDb('properties')
-          .where({ user: username, id: id })
+          .where({ owner: username, id: id })
           .first()
           .then((user) => {
             if (!user) {
@@ -52,7 +51,7 @@ exports.deleteUserProperty = function (username, id) {
               return reject(utils.respondWithCode(404))
             } else {
               return sqlDb('properties')
-                .where({ user: username, id: id })
+                .where({ owner: username, id: id })
                 .del()
                 .then(() => {
                   console.log("Property " + id + " successfully deleted from the database.")
@@ -77,14 +76,14 @@ exports.deleteUserProperty = function (username, id) {
  **/
 exports.getUserProperties = function (username) {
   return new Promise(function (resolve, reject) {
-    console.log("Deleting property from the database...")
+    console.log("Getting properties of user " + username + "...")
     return userService.findUser(username).then((foundUser) => {
       if (!foundUser) {
         console.log("There are no user with the given username.")
         return reject(utils.respondWithCode(404))
       } else {
         return sqlDb('properties')
-          .where({ user: username })
+          .where({ owner: username })
           .then((properties) => {
             return resolve(utils.respondWithCode(200, properties))
           })
@@ -118,7 +117,7 @@ exports.getUserProperty = function (username, id) {
         return reject(utils.respondWithCode(404))
       } else {
         return sqlDb('properties')
-          .where({ user: username, id: id })
+          .where({ owner: username, id: id })
           .first()
           .then((property) => {
             if (!property) {
@@ -152,14 +151,13 @@ exports.postUserProperty = function (body, username) {
 
     // TODO check that the operation is authorized
     const book = body['book'];
-    const position = body['position']
+    const position = body['position'];
     const user = username;
     const bookId = book['bookId'];
-    const region = position['region'];
-    const province = position['province'];
-    const city = position['city'];
+    const province = position['province'].toLowerCase();
+    const town = position['town'].toLowerCase();
 
-    if (!user || !bookId || !city || !region || !province) {
+    if (!user || !bookId || !town || !province) {
       console.error("Property not added: not nullable field is empty.")
       return reject(utils.respondWithCode(400))
     }
@@ -173,7 +171,7 @@ exports.postUserProperty = function (body, username) {
         return reject(utils.respondWithCode(404))
       } else {
         return sqlDb('properties')
-          .where({ owner: user, bookId: bookId, city: city, region: region, province: province })
+          .where({ owner: user, bookId: bookId, town: town, province: province })
           .first()
           .then((property) => {
             if (property) {
@@ -183,8 +181,7 @@ exports.postUserProperty = function (body, username) {
               return sqlDb('properties').insert({
                 owner: user,
                 bookId: bookId,
-                city: city,
-                region: region,
+                town: town,
                 province: province
               }).then(() => {
                 console.log(`Property successfully added to the database.`)
@@ -192,8 +189,7 @@ exports.postUserProperty = function (body, username) {
                   .where({
                     owner: user,
                     bookId: bookId,
-                    city: city,
-                    region: region,
+                    town: town,
                     province: province
                   })
                   .first()
@@ -211,3 +207,37 @@ exports.postUserProperty = function (body, username) {
   })
 }
 
+
+/**
+ * Get all the properties in a given town.
+ *
+ * province String The name of the province where the town of interest is placed.
+ * town String The name of the town of interest.
+ * returns List
+ **/
+exports.getPropertiesByPosition = function (province, town) {
+  return new Promise(function (resolve, reject) {
+
+    console.log("Retrieving properties in province: " + province + ", town: " + town + "...");
+
+    if (!province || !town) {
+      console.error("Province and town cannot be null.");
+      return reject(utils.respondWithCode(400))
+    }
+
+    return sqlDb('properties').where({ province: province, town: town })
+      .then(properties => {
+        if (!properties) {
+          console.log("No properties found in the given town.");
+          return reject(utils.respondWithCode(404));
+        } else {
+          console.log("Properites found.");
+          return resolve(utils.respondWithCode(200, properties));
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        return reject(utils.respondWithCode(500));
+      })
+  });
+}
