@@ -184,6 +184,49 @@ exports.getUsers = function () {
 
 
 /**
+ * Logs user into the system.
+ *
+ * username String The user name for login
+ * password String The password for login in clear text
+ * no response value expected for this operation
+ **/
+exports.loginUser = function(username,password) {
+  return new Promise(function(resolve, reject) {
+    return authenticateUser(username, password)
+      .then((user) => {
+        if (!user) {
+          console.log("There is no user.")
+          return reject(utils.respondWithCode(404))
+        }
+        return resolve(utils.respondWithCode(200, user))
+      })
+      .catch((error) => {
+        console.error(error.details)
+        reject(utils.respondWithCode(500))
+      })
+  });
+}
+
+function authenticateUser(username, password) {
+  return sqlDb('users')
+    .where({ username: username, password: password })
+    .first()
+}
+
+
+/**
+ * Logs out current logged in user session
+ *
+ * no response value expected for this operation
+ **/
+exports.logoutUser = function() {
+  return new Promise(function(resolve, reject) {
+    resolve(utils.respondWithCode(200));
+  });
+}
+
+
+/**
  * Update the user with the given username.
  * This can only be done by the logged in user.
  *
@@ -205,23 +248,23 @@ exports.updateUser = function (username, body) {
       } else {
         console.log("User " + username + " found. Updating...")
 
-        const name = body['name']
-        const surname = body['surname']
-        const email = body['email']
+        const newData = {
+          name: body['name'],
+          surname: body['surname'],
+          email: body['email'],
+        }
+        if(body['password'] != null)
+          newData.password = body['password']
 
         // 3. replace user informations
         return sqlDb('users')
           .where({ username: username })
-          .update({
-            name: name,
-            surname: surname,
-            email: email
-          }).then(() => {
+          .update(newData).then(() => {
             return sqlDb('users').where({ username: username }).first()
               .then((user) => {
                 console.log("User " + username + " successfully updated.")
                 return resolve(utils.respondWithCode(201, hidePassword(user)))
-              }).catch(error)((error) => {
+              }).catch((error) => {
                 console.error(error)
                 return reject(utils.respondWithCode(404))
               })

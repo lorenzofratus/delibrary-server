@@ -17,7 +17,7 @@ tags:
   description: "All the operations for managing users' exchanges"
 
 paths:
-  /user/login:
+  /users/login:
     get:
       tags:
       - "User"
@@ -36,12 +36,15 @@ paths:
         type: "string"
       responses:
         "200":
-          description: "successful operation"
-        "400":
-          $ref: "#/responses/BadRequest"
+          description: "User object with the given credentials."
+          schema:
+            $ref: "#/definitions/User"
+        "404":
+          $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
-  /user/logout:
+      x-swagger-router-controller: "User"
+  /users/logout:
     get:
       tags:
       - "User"
@@ -50,10 +53,9 @@ paths:
       responses:
         "200":
           description: "successful operation"
-        "400":
-          $ref: "#/responses/BadRequest"
         "500":
           $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "User"
   /users:
     get:
       tags:
@@ -130,7 +132,7 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "User"
-    put:
+    post:
       tags:
       - "User"
       summary: "Update the user with the given username."

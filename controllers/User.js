@@ -7,6 +7,7 @@ module.exports.addUser = function addUser (req, res, next) {
   var body = req.swagger.params['body'].value;
   User.addUser(body)
     .then(function (response) {
+      req.session.user = response.payload;
       utils.writeJson(res, response);
     })
     .catch(function (response) {
@@ -39,6 +40,30 @@ module.exports.getUserByUsername = function getUserByUsername (req, res, next) {
 module.exports.getUsers = function getUsers (req, res, next) {
   User.getUsers()
     .then(function (response) {
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, response);
+    });
+};
+
+module.exports.loginUser = function loginUser (req, res, next) {
+  var username = req.swagger.params['username'].value;
+  var password = req.swagger.params['password'].value;
+  User.loginUser(username,password)
+    .then(function (response) {
+      req.session.user = response.payload;
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, response);
+    });
+};
+
+module.exports.logoutUser = function logoutUser (req, res, next) {
+  User.logoutUser()
+    .then(function (response) {
+      req.session.destroy();
       utils.writeJson(res, response);
     })
     .catch(function (response) {

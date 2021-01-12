@@ -18,7 +18,7 @@ var port = process.env.PORT || 8080;
 // Session configuration
 app.use(cookieParser());
 app.use(session({
-  name: 'sid',
+  name: 'delibrary-sid',
   secret: 'super secret password',
   saveUninitialized: false,
   resave: false,
