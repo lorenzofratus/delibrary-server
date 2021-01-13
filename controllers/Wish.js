@@ -39,7 +39,7 @@ module.exports.getUserWishes = function getUserWishes (req, res, next) {
 };
 
 module.exports.postUserWish = function postUserWish (req, res, next) {
-  var book = req.swagger.params['book'].value;
+  var book = req.swagger.params['Book'].value;
   var username = req.swagger.params['username'].value;
   Wish.postUserWish(book,username)
     .then(function (response) {
