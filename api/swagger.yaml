@@ -35,11 +35,27 @@ paths:
         required: true
         type: "string"
       responses:
-        "200":
+        "200":        #Valid credentials. User authenticated.
           description: "User object with the given credentials."
           schema:
             $ref: "#/definitions/User"
-        "404":
+        "404":        #Invalid credentials. Stay at login.
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "User"
+  /users/login/me:
+    get:
+      tags:
+      - "User"
+      summary: "Logs user into the system by means of session cookie."
+      operationId: "validateUser"
+      responses:
+        "200":        #Valid session. User authenticated.
+          description: "User object with the given credentials."
+          schema:
+            $ref: "#/definitions/User"
+        "404":        #Invalid session. Redirect to login.
           $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
@@ -51,12 +67,12 @@ paths:
       summary: "Logs out current logged in user session"
       operationId: "logoutUser"
       responses:
-        "200":
+        "200":        #Session invalidated. Redirect to login.
           description: "successful operation"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "User"
-  /users:
+  /users:             #Unused
     get:
       tags:
       - "User"
@@ -66,13 +82,13 @@ paths:
       - "application/json"
       parameters: []
       responses:
-        "200":
+        "200":        #List of users.
           description: "Collection of all Delibrary users."
           schema:
             type: "array"
             items:
               $ref: "#/definitions/User"
-        "401":
+        "401":        #User not logged. Redirect to login.
           $ref: "#/responses/Unauthenticated"
         "500":
           $ref: "#/responses/ServerError"
@@ -93,15 +109,13 @@ paths:
         schema:
           $ref: "#/definitions/User"
       responses:
-        "201":
+        "201":        #Valid details. User created and authenticated.
           description: "User successfully created."
           schema:
             $ref: "#/definitions/User"
-        "401":
-          $ref: "#/responses/Unauthenticated"
-        "400":
+        "400":        #Non nullable fields empty. Stay at register.
           $ref: "#/responses/BadRequest"
-        "409":
+        "409":        #Non unique username. Stay at register.
           $ref: "#/responses/Conflict"
         "500":
           $ref: "#/responses/ServerError"
@@ -121,13 +135,13 @@ paths:
         required: true
         type: "string"
       responses:
-        "200":
+        "200":        #Valid username. User found.
           description: "User object with the given username."
           schema:
             $ref: "#/definitions/User"
-        "401":
+        "401":        #User not logged. Redirect to login.
           $ref: "#/responses/Unauthenticated"
-        "404":
+        "404":        #Invalid username. User not found.
           $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
@@ -153,18 +167,20 @@ paths:
         schema:
           $ref: "#/definitions/User"
       responses:
-        "201":
+        "201":        #Valid details. User updated.
           description: "User successfully updated."
           schema:
             $ref: "#/definitions/User"
-        "401":
+        "401":        #User not logged. Redirect to login.
           $ref: "#/responses/Unauthenticated"
-        "404":
+        "403":        #Updating another user. Forbidden.
+          $ref: "#/responses/Forbidden"
+        "404":        #No user found.
           $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "User"
-    delete:
+    delete:           #Unused
       tags:
       - "User"
       summary: "Delete the user with the given ID."
@@ -176,11 +192,13 @@ paths:
         required: true
         type: "string"
       responses:
-        "200":
+        "200":        #User deleted. Redirect to login.
           description: "User successfully deleted."
-        "401":
+        "401":        #User not logged. Redirect to login.
           $ref: "#/responses/Unauthenticated"
-        "404":
+        "403":        #Deleting another user. Forbidden.
+          $ref: "#/responses/Forbidden"
+        "404":        #No user found.
           $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
@@ -928,6 +946,10 @@ responses:
       $ref: "#/definitions/Error"
   Unauthenticated:
     description: "The client must authenticate itself to get the requested response."
+    schema:
+      $ref: "#/definitions/Error"
+  Forbidden:
+    description: "The client does not have access rights to this content."
     schema:
       $ref: "#/definitions/Error"
   ServerError:

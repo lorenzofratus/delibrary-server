@@ -92,8 +92,11 @@ function hidePassword(user) {
  * username String username of the user to delete.
  * no response value expected for this operation
  **/
-exports.deleteUser = function (username) {
+exports.deleteUser = function (user, username) {
   return new Promise((resolve, reject) => {
+
+    if(user.username != username)
+      return reject(utils.respondWithCode(403));
 
     console.log("Deleting user " + username + " from the database...")
 
@@ -188,7 +191,7 @@ exports.getUsers = function () {
  *
  * username String The user name for login
  * password String The password for login in clear text
- * no response value expected for this operation
+ * returns User
  **/
 exports.loginUser = function(username,password) {
   return new Promise(function(resolve, reject) {
@@ -198,7 +201,7 @@ exports.loginUser = function(username,password) {
           console.log("There is no user.")
           return reject(utils.respondWithCode(404))
         }
-        return resolve(utils.respondWithCode(200, user))
+        return resolve(utils.respondWithCode(200, hidePassword(user)))
       })
       .catch((error) => {
         console.error(error.details)
@@ -213,6 +216,29 @@ function authenticateUser(username, password) {
     .first()
 }
 
+/**
+ * Logs user into the system by means of session cookie.
+ *
+ * returns User
+ **/
+exports.validateUser = function(user) {
+  return new Promise(function(resolve, reject) {
+    if(!user)
+      return reject(utils.respondWithCode(404));
+    return findUser(user.username)
+      .then((user) => {
+        if (!user) {
+          console.log("There is no user.")
+          return reject(utils.respondWithCode(404))
+        }
+        return resolve(utils.respondWithCode(200, hidePassword(user)))
+      })
+      .catch((error) => {
+        console.error(error.details)
+        reject(utils.respondWithCode(500))
+      })
+  });
+}
 
 /**
  * Logs out current logged in user session
@@ -234,10 +260,13 @@ exports.logoutUser = function() {
  * body User Updated version of the user object.
  * no response value expected for this operation
  **/
-exports.updateUser = function (username, body) {
+exports.updateUser = function (user, username, body) {
   return new Promise(function (resolve, reject) {
 
     console.log("Updating user " + username + "...")
+
+    if(user.username != username)
+      return reject(utils.respondWithCode(403));
 
     // 1. TODO check authorizations
     // 2. check there's a user with the given username
@@ -266,16 +295,16 @@ exports.updateUser = function (username, body) {
                 return resolve(utils.respondWithCode(201, hidePassword(user)))
               }).catch((error) => {
                 console.error(error)
-                return reject(utils.respondWithCode(404))
+                return reject(utils.respondWithCode(500))
               })
           }).catch((error) => {
             console.error(error)
-            return reject(utils.respondWithCode(404))
+            return reject(utils.respondWithCode(500))
           })
       }
     }).catch((error) => {
       console.error(error)
-      return reject(utils.respondWithCode(404))
+      return reject(utils.respondWithCode(500))
     })
   });
 }

@@ -11,7 +11,14 @@ const { setupDataLayer } = require('./service/DataLayer');
 
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const sessionLogger = require('./middlewares/SessionLogger')
+const sessionLogger = require('./middlewares/SessionLogger');
+const checkLogin = require('./middlewares/CheckLogin');
+
+const openRoutes = [
+  "/v1/users/login", 
+  "/v1/users/login/me", 
+  "/v1/users/new"
+];
 
 var port = process.env.PORT || 8080;
 
@@ -28,7 +35,19 @@ app.use(session({
     maxAge: null,         //The cookie doesn't expire
   }
 }))
+
+const unless = function(pathList, middleware) {
+  return function(req, res, next) {
+      if (pathList.includes(req.path)) {
+          return next();
+      } else {
+          return middleware(req, res, next);
+      }
+  };
+};
+
 app.use(sessionLogger);   //Displays the session at each request, for debugging purposes
+app.use(unless(openRoutes, checkLogin));
 
 // swaggerRouter configuration
 var options = {
