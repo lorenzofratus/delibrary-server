@@ -38,7 +38,7 @@ app.use(session({
 
 const unless = function(pathList, middleware) {
   return function(req, res, next) {
-      if (pathList.includes(req.path)) {
+      if (!req.path.startsWith('/v1') || pathList.includes(req.path)) {
           return next();
       } else {
           return middleware(req, res, next);
