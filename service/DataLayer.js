@@ -12,7 +12,8 @@ let sqlDb = knex({
      * For Heroku, set the correct value of DATABASE_URL. See 'heroku config' */
     connection: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false   // TODO What is this?
+        require: false,
+        rejectUnauthorized: false
     },
     useNullAsDefault: true  // When inserting new values into the db, the default empty value is NULL.
 });
