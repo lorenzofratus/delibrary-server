@@ -23,5 +23,8 @@
     "nodemon": "^2.0.6",
     "pg": "^8.5.1",
     "swagger-tools": "^0.10.4"
+  },
+  "engines": {
+    "node": "15.x"
   }
 }

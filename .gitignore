@@ -3,3 +3,9 @@ package-lock.json
 .idea/
 TODO
 test/
+
+# https://devcenter.heroku.com/articles/deploying-nodejs#how-to-keep-build-artifacts-out-of-git
+/node_modules
+npm-debug.log
+.DS_Store
+/*.env
