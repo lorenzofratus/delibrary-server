@@ -144,8 +144,6 @@ exports.postUserWish = function (body, username) {
   return new Promise(function (resolve, reject) {
     console.log("Adding new wish to the database...");
 
-    // TODO check that the operation is authorized
-
     const user = username;
     const bookId = body['bookId'];
 
@@ -153,8 +151,6 @@ exports.postUserWish = function (body, username) {
       console.error("Wish not added: empty user or bookId.")
       return reject(utils.respondWithCode(400))
     }
-
-    // TODO check the user object is valid.
 
     // Check if the wish is already stored.
     return userService.findUser(username).then((userFound) => {

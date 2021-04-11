@@ -35,8 +35,6 @@ exports.addUser = function (body) {
 
     console.log("Adding new user to the database...");
 
-    // TODO check that the operation is authorized
-
     const username = body['username'];
     const name = body['name'];
     const surname = body['surname'];
@@ -268,8 +266,6 @@ exports.updateUser = function (user, username, body) {
     if(user.username != username)
       return reject(utils.respondWithCode(403));
 
-    // 1. TODO check authorizations
-    // 2. check there's a user with the given username
     return findUser(username).then((user) => {
       if (!user) {
         console.log("There is no user with username " + username)

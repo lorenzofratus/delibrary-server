@@ -157,8 +157,6 @@ exports.postUserExchange = function (body, buyerUsername) {
   return new Promise(function (resolve, reject) {
     console.log("Adding new exchange to the database...");
 
-    // TODO check that the operation is authorized
-
     const sellerUsername = body['sellerUsername'];
     const bookId = body['bookId'];
 

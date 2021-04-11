@@ -153,7 +153,6 @@ exports.postUserProperty = function (body, username) {
   return new Promise(function (resolve, reject) {
     console.log("Adding new property to the database...");
 
-    // TODO check that the operation is authorized
     const book = body['book'];
     const position = body['position'];
     const user = username;
@@ -165,8 +164,6 @@ exports.postUserProperty = function (body, username) {
       console.error("Property not added: not nullable field is empty.")
       return reject(utils.respondWithCode(400))
     }
-
-    // TODO check the user object is valid.
 
     // Check if the property is already stored.
     return userService.findUser(username).then((foundUser) => {
