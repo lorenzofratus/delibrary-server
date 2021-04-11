@@ -67,12 +67,10 @@ paths:
       summary: "Logs out current logged in user session"
       operationId: "logoutUser"
       responses:
-        "200":        #Session invalidated. Redirect to login.
+        "200":
           description: "successful operation"
-        "500":
-          $ref: "#/responses/ServerError"
       x-swagger-router-controller: "User"
-  /users:             #Unused
+  /users:
     get:
       tags:
       - "User"
@@ -88,7 +86,7 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/User"
-        "401":        #User not logged. Redirect to login.
+        "401":
           $ref: "#/responses/Unauthenticated"
         "500":
           $ref: "#/responses/ServerError"
@@ -224,10 +222,10 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Wish"
-        "400":
-          $ref: "#/responses/BadRequest"
         "401":
           $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Wish"
@@ -256,10 +254,12 @@ paths:
           description: "Wish successfully added."
           schema:
             $ref: "#/definitions/Wish"
-        "401":
-          $ref: "#/responses/Unauthenticated"
         "400":
           $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
         "409":
           $ref: "#/responses/Conflict"
         "500":
@@ -349,8 +349,6 @@ paths:
           $ref: "#/responses/BadRequest"
         "401":
           $ref: "#/responses/Unauthenticated"
-        "404":
-          $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Property"
@@ -384,8 +382,6 @@ paths:
           $ref: "#/responses/BadRequest"
         "401":
           $ref: "#/responses/Unauthenticated"
-        "404":
-          $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Property"
@@ -410,10 +406,10 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Property"
-        "400":
-          $ref: "#/responses/BadRequest"
         "401":
           $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"          
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Property"
@@ -451,6 +447,8 @@ paths:
           $ref: "#/responses/Unauthenticated"
         "400":
           $ref: "#/responses/BadRequest"
+        "404":
+          $ref: "#/responses/NotFound"
         "409":
           $ref: "#/responses/Conflict"
         "500":
@@ -536,10 +534,10 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Exchange"
-        "400":
-          $ref: "#/responses/BadRequest"
         "401":
           $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
@@ -564,10 +562,10 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Exchange"
-        "400":
-          $ref: "#/responses/BadRequest"
         "401":
           $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
@@ -592,10 +590,10 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Exchange"
-        "400":
-          $ref: "#/responses/BadRequest"
         "401":
           $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
@@ -634,6 +632,8 @@ paths:
           $ref: "#/responses/Unauthenticated"
         "400":
           $ref: "#/responses/BadRequest"
+        "404":
+          $ref: "#/responses/NotFound"
         "409":
           $ref: "#/responses/Conflict"
         "500":

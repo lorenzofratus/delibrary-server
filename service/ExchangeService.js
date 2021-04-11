@@ -375,11 +375,7 @@ exports.getUserExchangesSeller = function getUserExchangesSeller(sellerUsername)
         return sqlDb('exchanges')
           .where({ seller: sellerUsername })
           .then((exchanges) => {
-            if(!exchanges) {
-              console.log("No exchanges found with user " + username + " as seller.");
-              return reject(utils.respondWithCode(404));
-            }
-            console.log("Exchanges found with user " + username + " as seller.");
+            console.log("Exchanges of user as seller returned.");
             return resolve(utils.respondWithCode(200, exchanges));
           })
           .catch((error) => {
@@ -406,11 +402,7 @@ exports.getUserExchangesBuyer = function getUserExchangesBuyer(buyerUsername) {
         return sqlDb('exchanges')
           .where({ buyer: buyerUsername })
           .then((exchanges) => {
-            if(!exchanges) {
-              console.log("No exchanges found with user " + username + "as buyer.");
-              return reject(utils.respondWithCode(404));
-            }
-            console.log("Exchanges found with user " + username + " as buyer.");
+            console.log("Exchanges of user as buyer returned.");
             return resolve(utils.respondWithCode(200, exchanges))
           })
           .catch((error) => {
