@@ -85,10 +85,7 @@ exports.getUserProperties = function (username) {
         return sqlDb('properties')
           .where({ owner: username })
           .then((properties) => {
-            if(!properties) {
-              console.log("No properties for user " + username);
-              return reject(utils.respondWithCode(404))
-            }
+            console.log("Returning properties.")
             return resolve(utils.respondWithCode(200, properties))
           })
           .catch((error) => {
@@ -231,13 +228,8 @@ exports.getPropertiesByTown = function (province, town) {
 
     return sqlDb('properties').where({ province: province, town: town })
       .then(properties => {
-        if (!properties) {
-          console.log("No properties found in the given town.");
-          return reject(utils.respondWithCode(404));
-        } else {
-          console.log("Properites found.");
+          console.log("Returning properties.");
           return resolve(utils.respondWithCode(200, properties));
-        }
       })
       .catch(error => {
         console.error(error);
@@ -265,13 +257,8 @@ exports.getPropertiesByProvince = function (province) {
 
     return sqlDb('properties').where({ province: province })
       .then(properties => {
-        if (!properties) {
-          console.log("No properties found in the given province.");
-          return reject(utils.respondWithCode(404));
-        } else {
-          console.log("Properites found.");
+          console.log("Returning properties.");
           return resolve(utils.respondWithCode(200, properties));
-        }
       })
       .catch(error => {
         console.error(error);

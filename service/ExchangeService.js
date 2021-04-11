@@ -125,11 +125,7 @@ exports.getUserExchanges = function (username) {
           .where({ buyer: username })
           .orWhere({ seller: username })
           .then((exchanges) => {
-            if(!exchanges) {
-              console.log("No exchanges found for user " + username);
-              return reject(utils.respondWithCode(404));
-            }
-            console.log("Exchanges found for user " + username);
+            console.log("Returning exchanges");
             return resolve(utils.respondWithCode(200, exchanges));
           })
           .catch((error) => {
