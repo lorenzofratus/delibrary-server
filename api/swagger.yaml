@@ -260,6 +260,8 @@ paths:
           $ref: "#/responses/Unauthenticated"
         "404":
           $ref: "#/responses/NotFound"
+        "406":
+          $ref: "#/responses/NotAcceptable"
         "409":
           $ref: "#/responses/Conflict"
         "500":
@@ -449,6 +451,8 @@ paths:
           $ref: "#/responses/BadRequest"
         "404":
           $ref: "#/responses/NotFound"
+        "406":
+          $ref: "#/responses/NotAcceptable"
         "409":
           $ref: "#/responses/Conflict"
         "500":
@@ -926,7 +930,7 @@ definitions:
     properties:
       code:
         type: "integer"
-        enum: [400, 401, 403, 404, 409, 500]
+        enum: [400, 401, 403, 404, 406, 409, 500]
       title:
         type: "string"
       description:
@@ -936,6 +940,10 @@ definitions:
     - title
     - description
 responses:
+  NotAcceptable:
+    description: "The server can not accept the request."
+    schema:
+      $ref: "#/definitions/Error"
   NotFound:
     description: "The server can not find the requested resource."
     schema:

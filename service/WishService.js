@@ -36,22 +36,22 @@ exports.deleteUserWish = function (username, id) {
     console.log("Deleting wish from the database...")
 
     return userService.findUser(username).then((user) => {
-        if (!user) {
-          console.error("No users with the given username")
-          return reject(utils.respondWithCode(404))
-        } else {
-          return sqlDb('wishes')
-            .where({ id: id })
-            .del()
-            .then(() => {
-              console.log("Wish " + id + " successfully deleted from the database.")
-              return resolve(utils.respondWithCode(200))
-            }).catch((error) => {
-              console.error(error)
-              return reject(utils.respondWithCode(500))
-            })
-        }
-      })
+      if (!user) {
+        console.error("No users with the given username")
+        return reject(utils.respondWithCode(404))
+      } else {
+        return sqlDb('wishes')
+          .where({ id: id })
+          .del()
+          .then(() => {
+            console.log("Wish " + id + " successfully deleted from the database.")
+            return resolve(utils.respondWithCode(200))
+          }).catch((error) => {
+            console.error(error)
+            return reject(utils.respondWithCode(500))
+          })
+      }
+    })
   });
 }
 
@@ -68,26 +68,26 @@ exports.getUserWish = function (username, id) {
     console.log("Looking for wish " + id)
 
     return userService.findUser(username).then((user) => {
-      if(!user) {
+      if (!user) {
         console.error("No users with the given username")
         return reject(utils.respondWithCode(404))
       } else {
         return sqlDb('wishes')
-        .where({ user: username, id: id })
-        .first()
-        .then((wish) => {
-          if (!wish) {
-            console.log("There are no wish with the given username and id.")
-            return reject(utils.respondWithCode(404))
-          } else {
-            console.log("Wish found.")
-            return resolve(utils.respondWithCode(200, wish))
-          }
-        })
-        .catch((error) => {
-          console.error(error)
-          return reject(utils.respondWithCode(500))
-        })
+          .where({ user: username, id: id })
+          .first()
+          .then((wish) => {
+            if (!wish) {
+              console.log("There are no wish with the given username and id.")
+              return reject(utils.respondWithCode(404))
+            } else {
+              console.log("Wish found.")
+              return resolve(utils.respondWithCode(200, wish))
+            }
+          })
+          .catch((error) => {
+            console.error(error)
+            return reject(utils.respondWithCode(500))
+          })
       }
     })
 
@@ -105,22 +105,22 @@ exports.getUserWishes = function (username) {
   return new Promise(function (resolve, reject) {
     console.log("Returning all the wishes of " + username + ".")
     return userService.findUser(username).then((user) => {
-        if (!user) {
-          console.log("There are no user with the given username.")
-          return reject(utils.respondWithCode(404))
-        } else {
-          return sqlDb('wishes')
-            .where({ user: username })
-            .then((wishes) => {
-              console.log("Returning wishes.")
-              return resolve(utils.respondWithCode(200, wishes));
-            })
-            .catch((error) => {
-              console.error(error)
-              reject(utils.respondWithCode(500))
-            })
-        }
-      })
+      if (!user) {
+        console.log("There are no user with the given username.")
+        return reject(utils.respondWithCode(404))
+      } else {
+        return sqlDb('wishes')
+          .where({ user: username })
+          .then((wishes) => {
+            console.log("Returning wishes.")
+            return resolve(utils.respondWithCode(200, wishes));
+          })
+          .catch((error) => {
+            console.error(error)
+            reject(utils.respondWithCode(500))
+          })
+      }
+    })
       .catch((error) => {
         console.error(error)
         return reject(utils.respondWithCode(500))
@@ -150,38 +150,48 @@ exports.postUserWish = function (body, username) {
 
     // Check if the wish is already stored.
     return userService.findUser(username).then((userFound) => {
-      if(!userFound) {
+      if (!userFound) {
         console.error("No users with the given username")
         return reject(utils.respondWithCode(404))
       } else {
-        return sqlDb('wishes')
-        .where({ user: user, bookId: bookId })
-        .first()
-        .then((wish) => {
-          if (wish) {
-            console.error("There's already a wish with for the given bookId and username.")
-            return reject(utils.respondWithCode(409))
-          } else {
-            return sqlDb('wishes').insert({
-              user: user,
-              bookId: bookId
-            }).then(() => {
-              console.log(`Wish successfully added to the database.`)
+        return sqlDb('properties')
+          .where({ owner: user, bookId: bookId })
+          .first()
+          .then((property) => {
+            if (property) {
+              console.log("The book is currently a property of the user, so it has not been added as a wish.")
+              return reject(utils.respondWithCode(406))
+            } else {
               return sqlDb('wishes')
                 .where({ user: user, bookId: bookId })
                 .first()
                 .then((wish) => {
-                  return resolve(utils.respondWithCode(201, wish))
+                  if (wish) {
+                    console.error("There's already a wish with for the given bookId and username.")
+                    return reject(utils.respondWithCode(409))
+                  } else {
+                    return sqlDb('wishes').insert({
+                      user: user,
+                      bookId: bookId
+                    }).then(() => {
+                      console.log(`Wish successfully added to the database.`)
+                      return sqlDb('wishes')
+                        .where({ user: user, bookId: bookId })
+                        .first()
+                        .then((wish) => {
+                          return resolve(utils.respondWithCode(201, wish))
+                        })
+                    }).catch((error) => {
+                      console.error("ERROR: " + error)
+                      return reject(utils.respondWithCode(500))
+                    });
+                  }
+                }).catch((error) => {
+                  console.error("ERROR: " + error)
+                  return reject(utils.respondWithCode(500))
                 })
-            }).catch((error) => {
-              console.error("ERROR: " + error)
-              return reject(utils.respondWithCode(500))
-            });
-          }
-        }).catch((error) => {
-          console.error("ERROR: " + error)
-          return reject(utils.respondWithCode(500))
-        })
+            }
+          })
       }
     })
   })

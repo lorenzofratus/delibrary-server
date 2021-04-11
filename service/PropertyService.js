@@ -168,36 +168,46 @@ exports.postUserProperty = function (body, username) {
         console.error("No users with the given username")
         return reject(utils.respondWithCode(404))
       } else {
-        return sqlDb('properties')
-          .where({ owner: user, bookId: bookId, town: town, province: province })
+        return sqlDb('wishes')
+          .where({ user: user, bookId: bookId })
           .first()
-          .then((property) => {
-            if (property) {
-              console.error("The property is already inside the database.")
-              return reject(utils.respondWithCode(409))
+          .then((wish) => {
+            if (wish) {
+              console.log("The book is currently a wish of the user, so it has not been added as a property.")
+              return reject(utils.respondWithCode(406))
             } else {
-              return sqlDb('properties').insert({
-                owner: user,
-                bookId: bookId,
-                town: town,
-                province: province
-              }).then(() => {
-                console.log(`Property successfully added to the database.`)
-                return sqlDb('properties')
-                  .where({
-                    owner: user,
-                    bookId: bookId,
-                    town: town,
-                    province: province
-                  })
-                  .first()
-                  .then((property) => {
-                    return resolve(utils.respondWithCode(201, property))
-                  })
-              }).catch((error) => {
-                console.error("ERROR: " + error)
-                return reject(utils.respondWithCode(500))
-              });
+              return sqlDb('properties')
+                .where({ owner: user, bookId: bookId, town: town, province: province })
+                .first()
+                .then((property) => {
+                  if (property) {
+                    console.error("The property is already inside the database.")
+                    return reject(utils.respondWithCode(409))
+                  } else {
+                    return sqlDb('properties').insert({
+                      owner: user,
+                      bookId: bookId,
+                      town: town,
+                      province: province
+                    }).then(() => {
+                      console.log(`Property successfully added to the database.`)
+                      return sqlDb('properties')
+                        .where({
+                          owner: user,
+                          bookId: bookId,
+                          town: town,
+                          province: province
+                        })
+                        .first()
+                        .then((property) => {
+                          return resolve(utils.respondWithCode(201, property))
+                        })
+                    }).catch((error) => {
+                      console.error("ERROR: " + error)
+                      return reject(utils.respondWithCode(500))
+                    });
+                  }
+                })
             }
           })
       }
@@ -228,8 +238,8 @@ exports.getPropertiesByTown = function (province, town) {
 
     return sqlDb('properties').where({ province: province, town: town })
       .then(properties => {
-          console.log("Returning properties.");
-          return resolve(utils.respondWithCode(200, properties));
+        console.log("Returning properties.");
+        return resolve(utils.respondWithCode(200, properties));
       })
       .catch(error => {
         console.error(error);
@@ -257,8 +267,8 @@ exports.getPropertiesByProvince = function (province) {
 
     return sqlDb('properties').where({ province: province })
       .then(properties => {
-          console.log("Returning properties.");
-          return resolve(utils.respondWithCode(200, properties));
+        console.log("Returning properties.");
+        return resolve(utils.respondWithCode(200, properties));
       })
       .catch(error => {
         console.error(error);
