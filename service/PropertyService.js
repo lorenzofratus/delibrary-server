@@ -20,7 +20,8 @@ function initInterestsTable() {
     table.foreign('owner').references('username').inTable('users').onDelete('CASCADE');
     table.string('bookId').notNullable();
     table.string('town').notNullable();
-    table.string("province").notNullable();
+    table.string('province').notNullable();
+    table.boolean('isInAgreedExchange').notNullable().defaultTo(false);
   });
   console.log("Table 'properties' created.");
   return properties;

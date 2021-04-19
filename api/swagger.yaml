@@ -620,7 +620,7 @@ paths:
           properties:
             sellerUsername:
               type: string
-            bookId:
+            propertyId:
               type: integer
       - name: "buyerUsername"
         in: "path"
@@ -756,11 +756,11 @@ paths:
         description: "The id of the exchange that has to be updated."
         required: true
         type: "integer"
-      - name: "book"
+      - name: "property"
         in: "body"
         required: true
         schema:
-          $ref: "#/definitions/Book"
+          $ref: "#/definitions/Property"
       responses:
         "201":
           description: "Exchange successfully accepted."

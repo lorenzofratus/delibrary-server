@@ -25,7 +25,7 @@ function initExchangesTable() {
     table.increments('id').primary();
     table.string('buyer').notNullable();
     table.string('seller').notNullable();
-    table.integer('book').notNullable();
+    table.integer('property').notNullable();
     table.string("status").defaultTo(status.PROPOSED);
     table.integer("payment");
     table.foreign('buyer').references('users.username').onDelete('CASCADE');
@@ -35,6 +35,25 @@ function initExchangesTable() {
   return exchanges;
 }
 
+/**
+ * Set the flag 'isInAgreedExchange' of the Property associated
+ * to the given bookId to true.
+ */
+function putPropertyInAgreedState(bookId) {
+  return sqlDb('properties')
+    .where({id : bookId})
+    .update({isInAgreedExchange : true})
+}
+
+/**
+ * Set the flag 'isInAgreedExchange' of the Property associated
+ * to the given bookId to false.
+ */
+function removePropertyFromAgreedState(bookId) {
+  return sqlDb('properties')
+    .where({id : bookId})
+    .update({isInAgreedExchange : false})
+}
 
 /**
  * Delete the exchange of the user with the given ID.
@@ -154,12 +173,12 @@ exports.postUserExchange = function (body, buyerUsername) {
     console.log("Adding new exchange to the database...");
 
     const sellerUsername = body['sellerUsername'];
-    const bookId = body['bookId'];
+    const propertyId = body['propertyId'];
 
     console.log("buyerUsername: " + buyerUsername)
-    console.log("BookID: " + bookId)
+    console.log("PropertyId: " + propertyId)
     console.log("SellerUsername: " + sellerUsername)
-    if (!buyerUsername || bookId < 0 || !sellerUsername) {
+    if (!buyerUsername || propertyId < 0 || !sellerUsername) {
       console.error("Exchange not added: not nullable field is empty.")
       return reject(utils.respondWithCode(400))
     }
@@ -170,7 +189,7 @@ exports.postUserExchange = function (body, buyerUsername) {
     }
 
     return sqlDb('properties')
-      .where({owner: buyerUsername, bookId: bookId})
+      .where({owner: sellerUsername, id: propertyId})
       .first()
       .then((property) => {
         if (!property) {
@@ -184,7 +203,7 @@ exports.postUserExchange = function (body, buyerUsername) {
               return reject(utils.respondWithCode(404))
             } else {
               return sqlDb('exchanges')
-                .where({ buyer: buyerUsername, seller: sellerUsername, book: bookId })
+                .where({ buyer: buyerUsername, seller: sellerUsername, property: propertyId })
                 .first()
                 .then((exchange) => {
                   if (exchange) {
@@ -194,11 +213,11 @@ exports.postUserExchange = function (body, buyerUsername) {
                     return sqlDb('exchanges').insert({
                       buyer: buyerUsername,
                       seller: sellerUsername,
-                      book: bookId
+                      property: propertyId
                     }).then(() => {
                       console.log(`Exchange successfully added to the database.`)
                       return sqlDb('exchanges')
-                        .where({ buyer: buyerUsername, book: bookId })
+                        .where({ buyer: buyerUsername, property: propertyId })
                         .first()
                         .then((exchange) => {
                           return resolve(utils.respondWithCode(201, exchange))
@@ -219,24 +238,21 @@ exports.postUserExchange = function (body, buyerUsername) {
   })
 }
 
-exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, book) {
+exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, property) {
   return new Promise(function (resolve, reject) {
-    // 1. TODO Authorization management (403): check that the seller is the one performing this update. Maybe you have to slightly change the API.
-    // 2. Extract the exchange with the given ID: if there are no valid exchanges for the given ID, return 404.
-    // 3. Otherwise, update the status to status.AGREED
-    // 4. Return the updated exchange (return 201)
+
     console.log("Updating an exchange inside the database...")
 
-    if (exchangeId < 0 || !sellerUsername || !book) {
+    if (exchangeId < 0 || !sellerUsername || !property) {
       console.error("Non-nullable field is empty.");
       return reject(utils.respondWithCode(400))
     }
 
     return sqlDb('properties')
-      .where({owner: sellerUsername, bookId: book})
+      .where({owner: sellerUsername, id: property})
       .first()
-      .then((property) => {
-        if (!property) {
+      .then((extractedProperty) => {
+        if (!extractedProperty) {
           console.error("The specified property does not belong to the specified seller.")
           return reject(utils.respondWithCode(400))
         } else {
@@ -260,8 +276,14 @@ exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, book)
                       .where({ seller: sellerUsername, id: exchangeId })
                       .first()
                       .then((updatedExchange) => {
-                        console.log("Exchange successfully updated.")
-                        return resolve(utils.respondWithCode(201, updatedExchange))
+                        return putPropertyFromAgreedState(bookId)
+                        .then(() => {
+                          console.log("Exchange successfully updated.")
+                          return resolve(utils.respondWithCode(201, updatedExchange))
+                        }).catch((error) => {
+                          console.error(error)
+                          return reject(utils.respondWithCode(500))
+                        })
                       }).catch((error) => {
                         console.error(error)
                         return reject(utils.respondWithCode(500))
@@ -306,8 +328,14 @@ exports.happenedExchange = function happenedExchange(username, exchangeId) {
                 .where({ id: exchangeId })
                 .first()
                 .then((updatedExchange) => {
-                  console.log("Exchange successfully updated.")
-                  return resolve(utils.respondWithCode(201, updatedExchange))
+                  return removePropertyFromAgreedState(bookId)
+                    .then(() => {
+                      console.log("Exchange successfully updated.")
+                      return resolve(utils.respondWithCode(201, updatedExchange))
+                    }).catch((error) => {
+                      console.error(error)
+                      return reject(utils.respondWithCode(500))
+                    })
                 }).catch((error) => {
                   console.error(error)
                   return reject(utils.respondWithCode(500))
@@ -349,8 +377,14 @@ exports.refuseExchange = function refuseExchange(sellerUsername, exchangeId) {
                 .where({ seller: sellerUsername, id: exchangeId })
                 .first()
                 .then((updatedExchange) => {
-                  console.log("Exchange successfully updated.")
-                  return resolve(utils.respondWithCode(201, updatedExchange))
+                  return removePropertyFromAgreedState(bookId)
+                    .then(() => {
+                      console.log("Exchange successfully updated.")
+                      return resolve(utils.respondWithCode(201, updatedExchange))
+                    }).catch((error) => {
+                      console.error(error)
+                      return reject(utils.respondWithCode(500))
+                    })
                 }).catch((error) => {
                   console.error(error)
                   return reject(utils.respondWithCode(500))
