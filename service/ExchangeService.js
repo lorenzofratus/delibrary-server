@@ -2,6 +2,7 @@
 
 let sqlDb;
 var utils = require('../utils/writer.js');
+const { getUserProperty } = require('./PropertyService.js');
 var userService = require("./UserService.js");
 
 const status = {
@@ -37,22 +38,47 @@ function initExchangesTable() {
 
 /**
  * Set the flag 'isInAgreedExchange' of the Property associated
- * to the given bookId to true.
+ * to the given propertyId to true.
  */
-function putPropertyInAgreedState(bookId) {
+function putPropertyInAgreedState(propertyId) {
   return sqlDb('properties')
-    .where({id : bookId})
-    .update({isInAgreedExchange : true})
+    .where({ id: propertyId })
+    .update({ isInAgreedExchange: true })
 }
 
 /**
  * Set the flag 'isInAgreedExchange' of the Property associated
- * to the given bookId to false.
+ * to the given propertyId to false.
  */
-function removePropertyFromAgreedState(bookId) {
+function removePropertyFromAgreedState(propertyId) {
   return sqlDb('properties')
-    .where({id : bookId})
-    .update({isInAgreedExchange : false})
+    .where({ id: propertyId })
+    .update({ isInAgreedExchange: false })
+}
+
+function get_final_exchange(exchange) {
+  return sqlDb('properties').where({id : exchange.property}).first()
+    .then((property) => {
+      return sqlDb('properties').where({id : exchange.payment}).first()
+        .then((payment) => {
+          return {
+            id: exchange.id,
+            buyer: exchange.buyer,
+            seller: exchange.seller,
+            property: property,
+            payment: payment,
+            status: exchange.status
+          }
+        })
+    });
+}
+
+function get_final_exchanges(exchanges) {
+  let final_exchanges = [];
+  for(let exchange of exchanges) {
+    final_exchanges.push(get_final_exchange(exchange));
+  }
+  return Promise.all(final_exchanges);
 }
 
 /**
@@ -111,8 +137,11 @@ exports.getUserExchange = function (username, id) {
               console.log("There are no exchange with the given username and id.")
               return reject(utils.respondWithCode(404))
             } else {
-              console.log("Exchange found.")
-              return resolve(utils.respondWithCode(200, exchange))
+              return get_final_exchange(exchange)
+                .then((final_exchange) => {
+                  console.log("Exchange found.")
+                  return resolve(utils.respondWithCode(200, final_exchange))
+                })
             }
           })
           .catch((error) => {
@@ -144,8 +173,12 @@ exports.getUserExchanges = function (username) {
           .where({ buyer: username })
           .orWhere({ seller: username })
           .then((exchanges) => {
-            console.log("Returning exchanges");
-            return resolve(utils.respondWithCode(200, exchanges));
+            return get_final_exchanges(exchanges)
+              .then((final_exchanges) => {
+                console.log("Returning exchanges");
+                return resolve(utils.respondWithCode(200, final_exchanges));
+              })
+
           })
           .catch((error) => {
             console.error(error)
@@ -189,7 +222,7 @@ exports.postUserExchange = function (body, buyerUsername) {
     }
 
     return sqlDb('properties')
-      .where({owner: sellerUsername, id: propertyId})
+      .where({ owner: sellerUsername, id: propertyId })
       .first()
       .then((property) => {
         if (!property) {
@@ -207,7 +240,7 @@ exports.postUserExchange = function (body, buyerUsername) {
                 .first()
                 .then((exchange) => {
                   if (exchange) {
-                    console.error("There's already a exchange with for the given bookId and seller and buyer.")
+                    console.error("There's already a exchange with for the given propertyId and seller and buyer.")
                     return reject(utils.respondWithCode(409))
                   } else {
                     return sqlDb('exchanges').insert({
@@ -220,7 +253,10 @@ exports.postUserExchange = function (body, buyerUsername) {
                         .where({ buyer: buyerUsername, property: propertyId })
                         .first()
                         .then((exchange) => {
-                          return resolve(utils.respondWithCode(201, exchange))
+                          return get_final_exchange(exchange)
+                            .then((final_exchange) => {
+                              return resolve(utils.respondWithCode(201, final_exchange));
+                            })
                         })
                     }).catch((error) => {
                       console.error("ERROR: " + error)
@@ -249,7 +285,7 @@ exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, prope
     }
 
     return sqlDb('properties')
-      .where({owner: sellerUsername, id: property})
+      .where({ owner: sellerUsername, id: property })
       .first()
       .then((extractedProperty) => {
         if (!extractedProperty) {
@@ -276,14 +312,14 @@ exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, prope
                       .where({ seller: sellerUsername, id: exchangeId })
                       .first()
                       .then((updatedExchange) => {
-                        return putPropertyFromAgreedState(bookId)
-                        .then(() => {
-                          console.log("Exchange successfully updated.")
-                          return resolve(utils.respondWithCode(201, updatedExchange))
-                        }).catch((error) => {
-                          console.error(error)
-                          return reject(utils.respondWithCode(500))
-                        })
+                        return putPropertyFromAgreedState(propertyId)
+                          .then(() => {
+                            console.log("Exchange successfully updated.")
+                            return resolve(utils.respondWithCode(201, updatedExchange))
+                          }).catch((error) => {
+                            console.error(error)
+                            return reject(utils.respondWithCode(500))
+                          })
                       }).catch((error) => {
                         console.error(error)
                         return reject(utils.respondWithCode(500))
@@ -328,7 +364,7 @@ exports.happenedExchange = function happenedExchange(username, exchangeId) {
                 .where({ id: exchangeId })
                 .first()
                 .then((updatedExchange) => {
-                  return removePropertyFromAgreedState(bookId)
+                  return removePropertyFromAgreedState(updatedExchange.property)
                     .then(() => {
                       console.log("Exchange successfully updated.")
                       return resolve(utils.respondWithCode(201, updatedExchange))
@@ -377,7 +413,7 @@ exports.refuseExchange = function refuseExchange(sellerUsername, exchangeId) {
                 .where({ seller: sellerUsername, id: exchangeId })
                 .first()
                 .then((updatedExchange) => {
-                  return removePropertyFromAgreedState(bookId)
+                  return removePropertyFromAgreedState(updatedExchange.property)
                     .then(() => {
                       console.log("Exchange successfully updated.")
                       return resolve(utils.respondWithCode(201, updatedExchange))
@@ -409,8 +445,12 @@ exports.getUserExchangesSeller = function getUserExchangesSeller(sellerUsername)
         return sqlDb('exchanges')
           .where({ seller: sellerUsername })
           .then((exchanges) => {
-            console.log("Exchanges of user as seller returned.");
-            return resolve(utils.respondWithCode(200, exchanges));
+            return get_final_exchanges(exchanges)
+              .then((final_exchanges) => {
+                console.log("Exchanges of user as seller returned.");
+                return resolve(utils.respondWithCode(200, final_exchanges));
+              })
+
           })
           .catch((error) => {
             console.error(error)
@@ -436,8 +476,11 @@ exports.getUserExchangesBuyer = function getUserExchangesBuyer(buyerUsername) {
         return sqlDb('exchanges')
           .where({ buyer: buyerUsername })
           .then((exchanges) => {
-            console.log("Exchanges of user as buyer returned.");
-            return resolve(utils.respondWithCode(200, exchanges))
+            return get_final_exchanges(exchanges)
+              .then((final_exchanges) => {
+                console.log("Exchanges of user as buyer returned.");
+                return resolve(utils.respondWithCode(200, final_exchanges));
+              })
           })
           .catch((error) => {
             console.error(error)
