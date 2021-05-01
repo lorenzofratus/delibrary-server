@@ -304,7 +304,7 @@ exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, prope
                 return reject(utils.respondWithCode(400));
               } else {
                 return sqlDb('exchanges')
-                  .where({ seller: sellerUsername, id: exchange })
+                  .where({ seller: sellerUsername, id: exchangeId })
                   .first()
                   .update({ status: status.AGREED })
                   .then(() => {
