@@ -756,7 +756,7 @@ paths:
         description: "The id of the exchange that has to be updated."
         required: true
         type: "integer"
-      - name: "property"
+      - name: "payment"
         in: "body"
         required: true
         schema:

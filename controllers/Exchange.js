@@ -6,8 +6,8 @@ var Exchange = require('../service/ExchangeService');
 module.exports.agreeExchange = function agreeExchange (req, res, next) {
   var sellerUsername = req.swagger.params['sellerUsername'].value;
   var id = req.swagger.params['id'].value;
-  var book = req.swagger.params['book'].value;
-  Exchange.agreeExchange(sellerUsername,id,book)
+  var payment = req.swagger.params['payment'].value;
+  Exchange.agreeExchange(sellerUsername,id,payment)
     .then(function (response) {
       utils.writeJson(res, response);
     })

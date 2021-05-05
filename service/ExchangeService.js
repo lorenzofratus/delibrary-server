@@ -57,9 +57,9 @@ function removePropertyFromAgreedState(propertyId) {
 }
 
 function get_final_exchange(exchange) {
-  return sqlDb('properties').where({id : exchange.property}).first()
+  return sqlDb('properties').where({ id: exchange.property }).first()
     .then((property) => {
-      return sqlDb('properties').where({id : exchange.payment}).first()
+      return sqlDb('properties').where({ id: exchange.payment }).first()
         .then((payment) => {
           return {
             id: exchange.id,
@@ -75,7 +75,7 @@ function get_final_exchange(exchange) {
 
 function get_final_exchanges(exchanges) {
   let final_exchanges = [];
-  for(let exchange of exchanges) {
+  for (let exchange of exchanges) {
     final_exchanges.push(get_final_exchange(exchange));
   }
   return Promise.all(final_exchanges);
@@ -274,45 +274,49 @@ exports.postUserExchange = function (body, buyerUsername) {
   })
 }
 
-exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, property) {
+exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, payment) {
   return new Promise(function (resolve, reject) {
 
     console.log("Updating an exchange inside the database...")
 
-    if (exchangeId < 0 || !sellerUsername || !property) {
+    if (exchangeId < 0 || !sellerUsername || !payment) {
       console.error("Non-nullable field is empty.");
       return reject(utils.respondWithCode(400))
     }
 
-    return sqlDb('properties')
-      .where({ owner: sellerUsername, id: property })
+    return sqlDb('exchanges')
+      .where({ seller: sellerUsername, id: exchangeId })
       .first()
-      .then((extractedProperty) => {
-        if (!extractedProperty) {
-          console.error("The specified property does not belong to the specified seller.")
-          return reject(utils.respondWithCode(400))
+      .then((exchange) => {
+        if (!exchange) {
+          console.log("Exchange with given id and seller username not found.")
+          return reject(utils.respondWithCode(404));
+        } else if (exchange['status'] !== status.PROPOSED) {
+          console.log("You cannot modify the state of an exchange from " + exchange['status'] + " to 'agreed'.")
+          return reject(utils.respondWithCode(400));
         } else {
-          return sqlDb('exchanges')
-            .where({ seller: sellerUsername, id: exchangeId })
+          return sqlDb('properties')
+            .where({ id: payment.id })
             .first()
-            .then((exchange) => {
-              if (!exchange) {
-                console.log("Exchange not found.")
+            .then((payment) => {
+              if (!payment) {
+                console.log("Property with given payment id not found.")
                 return reject(utils.respondWithCode(404));
-              } else if (exchange['status'] !== status.PROPOSED) {
-                console.log("You cannot modify the state of an exchange from " + exchange['status'] + " to 'agreed'.")
+              } else if (payment['owner'] !== exchange.buyer) {
+                console.log("The exchange buyer is not thw owner of the payment property.")
                 return reject(utils.respondWithCode(400));
               } else {
                 return sqlDb('exchanges')
                   .where({ seller: sellerUsername, id: exchangeId })
                   .first()
-                  .update({ status: status.AGREED })
+                  .update({ status: status.AGREED, payment: payment.id })
                   .then(() => {
                     return sqlDb('exchanges')
                       .where({ seller: sellerUsername, id: exchangeId })
                       .first()
                       .then((updatedExchange) => {
-                        return putPropertyFromAgreedState(propertyId)
+                        return putPropertyInAgreedState(updatedExchange.property)
+                          .then(() => putPropertyInAgreedState(updatedExchange.payment))  // TODO does not work
                           .then(() => {
                             console.log("Exchange successfully updated.")
                             return resolve(utils.respondWithCode(201, updatedExchange))
