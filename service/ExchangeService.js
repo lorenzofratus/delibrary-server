@@ -284,59 +284,40 @@ exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, payme
       return reject(utils.respondWithCode(400))
     }
 
-    return sqlDb('exchanges')
-      .where({ seller: sellerUsername, id: exchangeId })
-      .first()
+    return sqlDb('exchanges').where({ seller: sellerUsername, id: exchangeId }).first()
       .then((exchange) => {
         if (!exchange) {
           console.log("Exchange with given id and seller username not found.")
           return reject(utils.respondWithCode(404));
         } else if (exchange['status'] !== status.PROPOSED) {
           console.log("You cannot modify the state of an exchange from " + exchange['status'] + " to 'agreed'.")
-          return reject(utils.respondWithCode(400));
-        } else {
-          return sqlDb('properties')
-            .where({ id: payment.id })
-            .first()
-            .then((payment) => {
-              if (!payment) {
-                console.log("Property with given payment id not found.")
-                return reject(utils.respondWithCode(404));
-              } else if (payment['owner'] !== exchange.buyer) {
-                console.log("The exchange buyer is not thw owner of the payment property.")
-                return reject(utils.respondWithCode(400));
-              } else {
-                return sqlDb('exchanges')
-                  .where({ seller: sellerUsername, id: exchangeId })
-                  .first()
-                  .update({ status: status.AGREED, payment: payment.id })
-                  .then(() => {
-                    return sqlDb('exchanges')
-                      .where({ seller: sellerUsername, id: exchangeId })
-                      .first()
-                      .then((updatedExchange) => {
-                        return putPropertyInAgreedState(updatedExchange.property)
-                          .then(() => putPropertyInAgreedState(updatedExchange.payment))  // TODO does not work
-                          .then(() => {
-                            console.log("Exchange successfully updated.")
-                            return resolve(utils.respondWithCode(201, updatedExchange))
-                          }).catch((error) => {
-                            console.error(error)
-                            return reject(utils.respondWithCode(500))
-                          })
-                      }).catch((error) => {
-                        console.error(error)
-                        return reject(utils.respondWithCode(500))
-                      })
-                  }).catch((error) => {
-                    console.error(error)
-                    return reject(utils.respondWithCode(500))
-                  })
-              }
-            })
-        }
+          return reject(utils.respondWithCode(400))
+        } else return sqlDb('properties').where({ id: payment.id }).first()
+          .then((payment) => {
+            if (!payment) {
+              console.log("Property with given payment id not found.")
+              return reject(utils.respondWithCode(404));
+            } else if (payment['owner'] !== exchange.buyer) {
+              console.log("The exchange buyer is not thw owner of the payment property.")
+              return reject(utils.respondWithCode(400));
+            }
+          })
+          .then(() => sqlDb('exchanges').where({ seller: sellerUsername, id: exchangeId }).first()
+            .update({ status: status.AGREED, payment: payment.id }))
+          .then(() => sqlDb('exchanges').where({ seller: sellerUsername, id: exchangeId }).first())
+          .then((updatedExchange) => putPropertyInAgreedState(updatedExchange.property)
+            .then(() => putPropertyInAgreedState(updatedExchange.payment))
+            .then(() => {
+              console.log("Exchange successfully updated.")
+              return resolve(utils.respondWithCode(201, updatedExchange))
+            }))
       })
-  })
+      .catch((error) => {
+        console.error(error)
+        return reject(utils.respondWithCode(500))
+      })
+  }
+  )
 }
 
 exports.happenedExchange = function happenedExchange(username, exchangeId) {
