@@ -327,8 +327,7 @@ exports.happenedExchange = function happenedExchange(username, exchangeId) {
     console.log("Updating an exchange inside the database...")
 
     return sqlDb('exchanges')
-      .where({ buyer: username, id: exchangeId })
-      .orWhere({ seller: username, id: exchangeId })
+      .where({ id: exchangeId })
       .first()
       .then((exchange) => {
         if (!exchange) {
@@ -340,30 +339,40 @@ exports.happenedExchange = function happenedExchange(username, exchangeId) {
         } else {
           return sqlDb('exchanges')
             .where({ id: exchangeId })
-            .first()
+            .returning(['property', 'payment'])
             .update({ status: status.HAPPENED })
+            /**
+             * Swap the owner and the position of the two properties exchanged.
+             * Set isInAgreedExchange to false for both properties.
+             */
+            .then((returned) =>
+              sqlDb('properties').where({ id: returned[0]['property'] }).first()
+                .then((property) =>
+                  sqlDb('properties').where({ id: returned[0]['payment'] }).first()
+                    .then((payment) =>
+                      sqlDb('properties').where({ id: property['id'] }).update({
+                        owner: payment['owner'],
+                        town: payment['town'],
+                        province: payment['province'],
+                        isInAgreedExchange: false
+                      })
+                        .then(() =>
+                          sqlDb('properties').where({ id: payment['id'] }).update({
+                            owner: property['owner'],
+                            town: property['town'],
+                            province: property['province'],
+                            isInAgreedExchange: false
+                          })
+                        ))))
             .then(() => {
-              return sqlDb('exchanges')
-                .where({ id: exchangeId })
-                .first()
-                .then((updatedExchange) => {
-                  return removePropertyFromAgreedState(updatedExchange.property)
-                    .then(() => {
-                      console.log("Exchange successfully updated.")
-                      return resolve(utils.respondWithCode(201, updatedExchange))
-                    }).catch((error) => {
-                      console.error(error)
-                      return reject(utils.respondWithCode(500))
-                    })
-                }).catch((error) => {
-                  console.error(error)
-                  return reject(utils.respondWithCode(500))
-                })
-            }).catch((error) => {
-              console.error(error)
-              return reject(utils.respondWithCode(500))
+              console.log("Exchange successfully updated.")
+              return resolve(utils.respondWithCode(201))
             })
         }
+      })
+      .catch((error) => {
+        console.error(error)
+        return reject(utils.respondWithCode(500))
       })
   })
 }
