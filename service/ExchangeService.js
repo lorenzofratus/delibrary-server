@@ -91,24 +91,22 @@ function get_final_exchanges(exchanges) {
 exports.deleteUserExchange = function (username, id) {
   return new Promise(function (resolve, reject) {
     console.log("Deleting exchange from the database...")
-
-    return userService.findUser(username).then((user) => {
-      if (!user) {
-        console.error("No users with the given username")
-        return reject(utils.respondWithCode(404))
-      } else {
-        return sqlDb('exchanges')
-          .where({ buyer: username, id: id })
-          .del()
-          .then(() => {
-            console.log("Exchange " + id + " successfully deleted from the database.")
-            return resolve(utils.respondWithCode(200))
-          }).catch((error) => {
-            console.error(error)
-            return reject(utils.respondWithCode(500))
-          })
-      }
-    })
+    return sqlDb('exchanges')
+      .where({ id: id })
+      .returning(['property', 'payment'])
+      .del()
+      .then((json) => sqlDb('properties')
+        .where({ id: json[0]['property'] })
+        .orWhere({ id: json[0]['payment'] })
+        .update({ isInAgreedExchange: false })
+        .then(() => {
+          console.log("Exchange " + id + " successfully deleted from the database.")
+          return resolve(utils.respondWithCode(200))
+        })
+      ).catch((error) => {
+        console.error(error)
+        return reject(utils.respondWithCode(500))
+      })
   });
 }
 
