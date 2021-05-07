@@ -88,28 +88,37 @@ function get_final_exchanges(exchanges) {
  * id Long ID of the exchange.
  * no response value expected for this operation
  **/
-exports.deleteUserExchange = function (username, id) {
-  return new Promise(function (resolve, reject) {
-    console.log("Deleting exchange from the database...")
-    return sqlDb('exchanges')
-      .where({ id: id })
-      .returning(['property', 'payment'])
-      .del()
-      .then((json) => sqlDb('properties')
-        .where({ id: json[0]['property'] })
-        .orWhere({ id: json[0]['payment'] })
-        .update({ isInAgreedExchange: false })
-        .then(() => {
-          console.log("Exchange " + id + " successfully deleted from the database.")
-          return resolve(utils.respondWithCode(200))
-        })
-      ).catch((error) => {
-        console.error(error)
-        return reject(utils.respondWithCode(500))
-      })
-  });
-}
+exports.deleteUserExchange = async (username, id) => {
+  try {
+    console.log(`Deleting exchange ${id} from the database...`)
 
+    let exchange = await sqlDb('exchanges').where({ id: id }).first()
+    if (!exchange) {
+      console.error(`No exchange found with id ${id}.`)
+      return utils.respondWithCode(404)
+    }
+
+    let [{ property: propertyId, payment: paymentId }] =
+      await sqlDb('exchanges')
+        .where({ id: id })
+        .returning(['property', 'payment'])
+        .del()
+
+    if (propertyId) await sqlDb('properties')
+      .where({ id: propertyId })
+      .update({ isInAgreedExchange: false })
+
+    if (paymentId) await sqlDb('properties')
+      .where({ id: paymentId })
+      .update({ isInAgreedExchange: false })
+
+    console.log(`Exchange ${id} successfully deleted from the database.`)
+    return utils.respondWithCode(200)
+  } catch (error) {
+    console.error(error)
+    return utils.respondWithCode(500)
+  }
+}
 
 /**
  * Get the exchange of the user with the given ID.
@@ -272,109 +281,93 @@ exports.postUserExchange = function (body, buyerUsername) {
   })
 }
 
-exports.agreeExchange = function agreeExchange(sellerUsername, exchangeId, payment) {
-  return new Promise(function (resolve, reject) {
+exports.agreeExchange = async (sellerUsername, id, payment_tmp) => {
+  try {
+    console.log(`Setting exchange ${id} as agreed into the database...`)
 
-    console.log("Updating an exchange inside the database...")
-
-    if (exchangeId < 0 || !sellerUsername || !payment) {
-      console.error("Non-nullable field is empty.");
-      return reject(utils.respondWithCode(400))
+    let exchange = await sqlDb('exchanges').where({ id: id }).first()
+    if (!exchange) {
+      console.error(`No exchange found with id ${id}.`)
+      return utils.respondWithCode(404)
     }
 
-    return sqlDb('exchanges').where({ seller: sellerUsername, id: exchangeId }).first()
-      .then((exchange) => {
-        if (!exchange) {
-          console.log("Exchange with given id and seller username not found.")
-          return reject(utils.respondWithCode(404));
-        } else if (exchange['status'] !== status.PROPOSED) {
-          console.log("You cannot modify the state of an exchange from " + exchange['status'] + " to 'agreed'.")
-          return reject(utils.respondWithCode(400))
-        } else return sqlDb('properties').where({ id: payment.id }).first()
-          .then((payment) => {
-            if (!payment) {
-              console.log("Property with given payment id not found.")
-              return reject(utils.respondWithCode(404));
-            } else if (payment['owner'] !== exchange.buyer) {
-              console.log("The exchange buyer is not thw owner of the payment property.")
-              return reject(utils.respondWithCode(400));
-            }
-          })
-          .then(() => sqlDb('exchanges').where({ seller: sellerUsername, id: exchangeId }).first()
-            .update({ status: status.AGREED, payment: payment.id }))
-          .then(() => sqlDb('exchanges').where({ seller: sellerUsername, id: exchangeId }).first())
-          .then((updatedExchange) => putPropertyInAgreedState(updatedExchange.property)
-            .then(() => putPropertyInAgreedState(updatedExchange.payment))
-            .then(() => {
-              console.log("Exchange successfully updated.")
-              return resolve(utils.respondWithCode(201, updatedExchange))
-            }))
-      })
-      .catch((error) => {
-        console.error(error)
-        return reject(utils.respondWithCode(500))
-      })
+    let payment = await sqlDb('properties').where({ id: payment_tmp['id'] }).first()
+    if (!payment) {
+      console.error(`No payment found with id ${payment_tmp['id']}.`)
+      return utils.respondWithCode(404)
+    }
+
+    if (payment['owner'] !== exchange['buyer']) {
+      console.error(`The exchange buyer is not the owner of the payment property.`)
+      return utils.respondWithCode(400)
+    }
+
+    if (exchange['status'] !== status.PROPOSED) {
+      console.log(`You cannot modify the state of an exchange from ${exchange['status']} to 'agreed'.`)
+      return utils.respondWithCode(400);
+    }
+
+    await sqlDb('exchanges')
+      .where({ id: id })
+      .update({ status: status.AGREED, payment: payment_tmp['id'] })
+
+    let updated_exchange = await sqlDb('exchanges').where({ id: id }).first()
+
+    await putPropertyInAgreedState(updated_exchange['property'])
+    await putPropertyInAgreedState(updated_exchange['payment'])
+
+    console.log(`Exchange ${id} successfully updated as agreed.`)
+    return utils.respondWithCode(201, updated_exchange)
+  } catch (error) {
+    console.error(error)
+    return utils.respondWithCode(500)
   }
-  )
 }
 
-exports.happenedExchange = function happenedExchange(username, exchangeId) {
-  return new Promise(function (resolve, reject) {
-    // 1. TODO Authorization management (403): check that the seller is the one performing this update. Maybe you have to slightly change the API.
-    // 2. Extract the exchange with the given ID: if there are no valid exchanges for the given ID, return 404.
-    // 3. Otherwise, update the status to status.AGREED
-    // 4. Return the updated exchange (return 201)
-    console.log("Updating an exchange inside the database...")
+exports.happenedExchange = async (username, id) => {
 
-    return sqlDb('exchanges')
-      .where({ id: exchangeId })
-      .first()
-      .then((exchange) => {
-        if (!exchange) {
-          console.log("Exchange not found.")
-          return reject(utils.respondWithCode(404));
-        } else if (exchange['status'] !== status.AGREED) {
-          console.log("You cannot modify the state of an exchange from " + exchange['status'] + " to 'happened'.")
-          return reject(utils.respondWithCode(400));
-        } else {
-          return sqlDb('exchanges')
-            .where({ id: exchangeId })
-            .returning(['property', 'payment'])
-            .update({ status: status.HAPPENED })
-            /**
-             * Swap the owner and the position of the two properties exchanged.
-             * Set isInAgreedExchange to false for both properties.
-             */
-            .then((returned) =>
-              sqlDb('properties').where({ id: returned[0]['property'] }).first()
-                .then((property) =>
-                  sqlDb('properties').where({ id: returned[0]['payment'] }).first()
-                    .then((payment) =>
-                      sqlDb('properties').where({ id: property['id'] }).update({
-                        owner: payment['owner'],
-                        town: payment['town'],
-                        province: payment['province'],
-                        isInAgreedExchange: false
-                      })
-                        .then(() =>
-                          sqlDb('properties').where({ id: payment['id'] }).update({
-                            owner: property['owner'],
-                            town: property['town'],
-                            province: property['province'],
-                            isInAgreedExchange: false
-                          })
-                        ))))
-            .then(() => {
-              console.log("Exchange successfully updated.")
-              return resolve(utils.respondWithCode(201))
-            })
-        }
-      })
-      .catch((error) => {
-        console.error(error)
-        return reject(utils.respondWithCode(500))
-      })
-  })
+  try {
+    console.log(`Setting exchange ${id} as happened into the database...`)
+
+    let exchange = await sqlDb('exchanges').where({ id: id }).first()
+    if (!exchange) {
+      console.error(`No exchange found with id ${id}.`)
+      return utils.respondWithCode(404)
+    }
+
+    if (exchange['status'] !== status.AGREED) {
+      console.log(`You cannot modify the state of an exchange from ${exchange['status']} to 'happened'.`)
+      return utils.respondWithCode(400);
+    }
+
+    await sqlDb('exchanges')
+      .where({ id: id })
+      .update({ status: status.HAPPENED })
+
+    let updated_exchange = await sqlDb('exchanges').where({ id: id }).first()
+    let property = await sqlDb('properties').where({ id: updated_exchange['property'] }).first()
+    let payment = await sqlDb('properties').where({ id: updated_exchange['payment'] }).first()
+
+    await sqlDb('properties').where({ id: property['id'] }).update({
+      owner: payment['owner'],
+      town: payment['town'],
+      province: payment['province'],
+      isInAgreedExchange: false
+    })
+
+    await sqlDb('properties').where({ id: payment['id'] }).update({
+      owner: property['owner'],
+      town: property['town'],
+      province: property['province'],
+      isInAgreedExchange: false
+    })
+
+    console.log(`Exchange successfully updated.`)
+    return utils.respondWithCode(201, updated_exchange)
+  } catch (error) {
+    console.error(error)
+    return utils.respondWithCode(500)
+  }
 }
 
 exports.refuseExchange = function refuseExchange(sellerUsername, exchangeId) {
