@@ -56,21 +56,22 @@ function removePropertyFromAgreedState(propertyId) {
     .update({ isInAgreedExchange: false })
 }
 
-function get_final_exchange(exchange) {
-  return sqlDb('properties').where({ id: exchange.property }).first()
-    .then((property) => {
-      return sqlDb('properties').where({ id: exchange.payment }).first()
-        .then((payment) => {
-          return {
-            id: exchange.id,
-            buyer: exchange.buyer,
-            seller: exchange.seller,
-            property: property,
-            payment: payment,
-            status: exchange.status
-          }
-        })
-    });
+async function get_final_exchange(exchange) {
+  
+  let property = await sqlDb('properties').where({ id: exchange.property }).first()
+  let payment = await sqlDb('properties').where({ id: exchange.payment }).first()
+
+  let buyer = await sqlDb('users').where({ username: exchange.buyer }).first()
+  let seller = await sqlDb('users').where({ username: exchange.seller }).first()
+
+  return {
+    id: exchange.id,
+    buyer: userService.hidePassword(buyer),
+    seller: userService.hidePassword(seller),
+    property: property,
+    payment: payment,
+    status: exchange.status
+  }
 }
 
 function get_final_exchanges(exchanges) {

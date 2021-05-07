@@ -851,9 +851,9 @@ definitions:
         type: "integer"
         format: "int64"
       buyer:
-        type: "string"
+        $ref: "#/definitions/User"
       seller:
-        type: "string"
+        $ref: "#/definitions/User"
       property:
         $ref: "#/definitions/Property"
       payment:

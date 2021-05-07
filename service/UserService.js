@@ -84,6 +84,12 @@ function hidePassword(user) {
   return userWithoutPassword;
 }
 
+exports.hidePassword = function (user) {
+  let userWithoutPassword = user;
+  userWithoutPassword['password'] = null;
+  return userWithoutPassword;
+}
+
 /**
  * Delete the user with the given ID.
  *
@@ -130,7 +136,6 @@ function findUser(username) {
     .where({ username: username })
     .first()
 }
-
 
 /**
  * Get the user with the given username.
