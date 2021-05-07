@@ -643,49 +643,13 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
-  /users/{buyerUsername}/exchanges/{id}:
-    get:
-      tags:
-      - "Exchange"
-      summary: "Get the exchange of the buyer with the given ID."
-      operationId: "getUserExchange"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "buyerUsername"
-        in: "path"
-        description: "Username of the buyer."
-        required: true
-        type: "string"
-      - name: "id"
-        in: "path"
-        description: "ID of the exchange."
-        required: true
-        type: "integer"
-        format: "int64"
-      responses:
-        "200":
-          description: "The required exchange."
-          schema:
-            $ref: "#/definitions/Exchange"
-        "401":
-          $ref: "#/responses/Unauthenticated"
-        "404":
-          $ref: "#/responses/NotFound"
-        "500":
-          $ref: "#/responses/ServerError"
-      x-swagger-router-controller: "Exchange"
+  /exchanges/{id}:
     delete:
       tags:
       - "Exchange"
-      summary: "Delete the exchange of the buyer with the given ID."
+      summary: "Delete the exchange with the given id."
       operationId: "deleteUserExchange"
       parameters:
-      - name: "buyerUsername"
-        in: "path"
-        description: "Username of the buyer."
-        required: true
-        type: "string"
       - name: "id"
         in: "path"
         description: "ID of the exchange."
@@ -702,21 +666,15 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
-  /users/{sellerUsername}/exchanges/{id}/refuse:
+  /exchanges/{id}/refuse:
     put:
       tags:
       - "Exchange"
-      summary: "The seller refuses the exchange proposed by the buyer."
-      description: "This can only be done by the logged-in seller on an exchange whose state is 'proposed'."
+      summary: "Refuse the exchange with the given id."
       operationId: "refuseExchange"
       produces:
       - "application/json"
       parameters:
-      - name: "sellerUsername"
-        in: "path"
-        description: "Username of the seller that wants to refuse the exchange."
-        required: true
-        type: "string"
       - name: "id"
         in: "path"
         description: "The id of the exchange that has to be updated."
@@ -736,31 +694,29 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
-  /users/{sellerUsername}/exchanges/{id}/agree:
+  /exchanges/{id}/agree:
     put:
       tags:
       - "Exchange"
-      summary: "The seller agrees with the exchange proposed by the buyer."
-      description: "This can only be done by the logged-in seller on an exchange whose state is 'proposed'."
+      summary: "Agree with the exchange with the given id."
       operationId: "agreeExchange"
       produces:
       - "application/json"
       parameters:
-      - name: "sellerUsername"
-        in: "path"
-        description: "Username of the seller that wants to accept the exchange."
-        required: true
-        type: "string"
       - name: "id"
         in: "path"
         description: "The id of the exchange that has to be updated."
         required: true
         type: "integer"
-      - name: "payment"
-        in: "body"
-        required: true
+      - in: "body"
+        name: "body"
         schema:
-          $ref: "#/definitions/Property"
+          type: "object"
+          required:
+            - paymentId
+          properties:
+            paymentId:
+              type: "integer"
       responses:
         "201":
           description: "Exchange successfully accepted."
@@ -775,21 +731,15 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
-  /users/{username}/exchanges/{id}/happen:
+  /exchanges/{id}/happen:
     put:
       tags:
       - "Exchange"
-      summary: "A user involved in the exchange with the given ID marks it as 'happened'."
-      description: "This can only be done by the logged-in seller OR the logged-in buyer on an exchange whose state is 'proposed'."
+      summary: "A user involved in the exchange with the given id marks it as 'happened'."
       operationId: "happenedExchange"
       produces:
       - "application/json"
       parameters:
-      - name: "username"
-        in: "path"
-        description: "Username of the seller or of the buyer."
-        required: true
-        type: "string"
       - name: "id"
         in: "path"
         description: "The id of the exchange that has to be updated."
