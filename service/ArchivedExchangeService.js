@@ -1,5 +1,12 @@
 'use strict';
 
+const status = {
+  PROPOSED: 'proposed',
+  REFUSED: 'refused',
+  AGREED: 'agreed',
+  HAPPENED: 'happened'
+}
+
 let sqlDb;
 var utils = require('../utils/writer.js');
 var userService = require("./UserService.js");
