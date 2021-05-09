@@ -517,7 +517,7 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Property"
-  /users/{sellerUsername}/exchanges/seller:
+  /users/{sellerUsername}/exchanges/active/seller:
     get:
       tags:
       - "Exchange"
@@ -545,7 +545,7 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
-  /users/{buyerUsername}/exchanges/buyer:
+  /users/{buyerUsername}/exchanges/active/buyer:
     get:
       tags:
       - "Exchange"
@@ -573,7 +573,63 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Exchange"
-  /users/{username}/exchanges:
+  /users/{sellerUsername}/exchanges/archived/seller:
+    get:
+      tags:
+      - "ArchivedExchange"
+      summary: "Get all the archived exchanges where the user were a seller."
+      operationId: "getArchivedUserExchangesSeller"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "sellerUsername"
+        in: "path"
+        description: "Username of the seller whose archived exchanges have to be obtained."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Collection of archived exchanges of the seller."
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ArchivedExchange"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "ArchivedExchange"
+  /users/{buyerUsername}/exchanges/archived/buyer:
+    get:
+      tags:
+      - "ArchivedExchange"
+      summary: "Get all the archived exchanges where the user were a buyer."
+      operationId: "getArchivedUserExchangesBuyer"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "buyerUsername"
+        in: "path"
+        description: "Username of the buyer whose archived exchanges have to be obtained."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Collection of archived exchanges of the buyer."
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ArchivedExchange"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "ArchivedExchange"
+  /users/{username}/exchanges/active:
     get:
       tags:
       - "Exchange"
@@ -863,9 +919,27 @@ definitions:
         enum:
         - "proposed"
         - "refused"
+    title: "Exchange"
+  ArchivedExchange:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      buyer:
+        type: "string"
+      seller:
+        type: "string"
+      propertyBookId:
+        type: "string"
+      payment:
+        type: "string"
+      status:
+        type: "string"
+        enum:
         - "agreed"
         - "happened"
-    title: "Exchange"
+    title: "ArchivedExchange"
   Error:
     type: "object"
     properties:

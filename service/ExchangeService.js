@@ -19,13 +19,6 @@ exports.exchangesDbSetup = function (connection) {
   })
 }
 
-exports.archivedExchangesDbSetup = function(connection) {
-  return sqlDb.schema.hasTable('archivedexchanges').then(exists => {
-    if (!exists) return initArchivedExchangesTable()
-    else console.log("Table 'archivedexchanges' already exists.")
-  })
-}
-
 function initExchangesTable() {
   console.log("Table 'exchanges' does not exist. Creating it...");
   var exchanges = sqlDb.schema.createTable("exchanges", table => {
@@ -40,22 +33,6 @@ function initExchangesTable() {
   });
   console.log("Table 'exchanges' created.");
   return exchanges;
-}
-
-function initArchivedExchangesTable() {
-  console.log("Table 'archivedexchanges' does not exist. Creating it...");
-  let archivedExchangesTable = sqlDb.schema.createTable('archivedexchanges', table => {
-    table.increments('id').primary();
-    table.string('buyer').notNullable();
-    table.string('seller').notNullable();
-    table.string('propertyBookId').notNullable();
-    table.string('status').defaultTo(status.REFUSED);
-    table.string('paymentBookId');
-    table.foreign('buyer').references('users.username').onDelete('CASCADE');
-    table.foreign('seller').references('users.username').onDelete('CASCADE');
-  });
-  console.log("Table 'archivedexchanges' created.");
-  return archivedExchangesTable;
 }
 
 /**
@@ -89,7 +66,7 @@ exports.archiveExchangesContaining = async (propertyId) => {
 
   console.log(exchangesToBeArchived)
 
-  for (let exchange of exchangesToBeArchived){
+  for (let exchange of exchangesToBeArchived) {
     console.log(exchange)
     archive(exchange)
   }
@@ -103,24 +80,24 @@ exports.archiveExchangesContaining = async (propertyId) => {
  *  Exchange is HAPPENED. Otherwise, it is REFUSED.
  * 2. remove the Exchange from table 'exchanges'
  */
-async function archive(exchange) {
+async function archive(exchange, new_status = status.REFUSED) {
 
-  let propertyBookId = await sqlDb('properties')
+  let [{ bookId: propertyBookId }] = await sqlDb('properties')
     .select('bookId')
-    .where({ id: exchange['property'] })
-    .first();
+    .where({ id: exchange['property'] });
 
-  let paymentBookId = await sqlDb('properties')
-    .select('bookId')
-    .where({ id: exchange['property'] })
-    .first();
+  let paymentBookId;
+  if (!exchange['payment']) paymentBookId = null;
+  else [{ bookId: paymentBookId }] = await sqlDb('properties')
+      .select('bookId')
+      .where({ id: exchange['payment'] });
 
   let [archivedExchange] = await sqlDb('archivedexchanges').insert({
     buyer: exchange['buyer'],
     seller: exchange['seller'],
     propertyBookId: propertyBookId,
     paymentBookId: paymentBookId,
-    status: exchange['status'] === status.HAPPENED ? status.HAPPENED : status.REFUSED
+    status: new_status
   }, '*')
 
   await sqlDb('exchanges')
@@ -392,7 +369,7 @@ exports.happenedExchange = async (id) => {
       isInAgreedExchange: false
     })
 
-    let archivedExchange = await archive(exchange);
+    let archivedExchange = await archive(exchange, status.HAPPENED);
 
     console.log(`Exchange successfully updated.`)
     return utils.respondWithCode(201, archivedExchange)

@@ -1,7 +1,8 @@
 let { usersDbSetup } = require("./UserService");
-let { exchangesDbSetup, archivedExchangesDbSetup } = require("./ExchangeService");
+let { exchangesDbSetup } = require("./ExchangeService");
 let { propertiesDbSetup } = require("./PropertyService");
 let { wishesDbSetup } = require("./WishService");
+let { archivedExchangesDbSetup } = require("./ArchivedExchangeService");
 
 const knex = require("knex");
 
