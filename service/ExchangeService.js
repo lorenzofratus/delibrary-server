@@ -193,7 +193,7 @@ exports.getUserExchanges = function (username) {
             return get_final_exchanges(exchanges)
               .then((final_exchanges) => {
                 console.log("Returning exchanges");
-                return resolve(utils.respondWithCode(200, final_exchanges));
+                return resolve(utils.respondWithCode(200, { "items" : final_exchanges }));
               })
 
           })
@@ -436,7 +436,7 @@ exports.getUserExchangesSeller = function getUserExchangesSeller(sellerUsername)
             return get_final_exchanges(exchanges)
               .then((final_exchanges) => {
                 console.log("Exchanges of user as seller returned.");
-                return resolve(utils.respondWithCode(200, final_exchanges));
+                return resolve(utils.respondWithCode(200, { "items" : final_exchanges }));
               })
 
           })
@@ -467,7 +467,7 @@ exports.getUserExchangesBuyer = function getUserExchangesBuyer(buyerUsername) {
             return get_final_exchanges(exchanges)
               .then((final_exchanges) => {
                 console.log("Exchanges of user as buyer returned.");
-                return resolve(utils.respondWithCode(200, final_exchanges));
+                return resolve(utils.respondWithCode(200, { "items" : final_exchanges }));
               })
           })
           .catch((error) => {

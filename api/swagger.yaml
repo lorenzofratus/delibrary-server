@@ -535,9 +535,12 @@ paths:
         "200":
           description: "Collection of exchanges of the seller."
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Exchange"
+            type: "object"
+            properties:
+              items:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Exchange"
         "401":
           $ref: "#/responses/Unauthenticated"
         "404":
@@ -563,9 +566,12 @@ paths:
         "200":
           description: "Collection of exchanges of the buyer."
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Exchange"
+            type: "object"
+            properties:
+              items:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Exchange"
         "401":
           $ref: "#/responses/Unauthenticated"
         "404":
@@ -591,9 +597,12 @@ paths:
         "200":
           description: "Collection of archived exchanges of the seller."
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/ArchivedExchange"
+            type: "object"
+            properties:
+              items:
+                type: "array"
+                items:
+                  $ref: "#/definitions/ArchivedExchange"
         "401":
           $ref: "#/responses/Unauthenticated"
         "404":
@@ -619,9 +628,12 @@ paths:
         "200":
           description: "Collection of archived exchanges of the buyer."
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/ArchivedExchange"
+            type: "object"
+            properties:
+              items:
+                type: "array"
+                items:
+                  $ref: "#/definitions/ArchivedExchange"
         "401":
           $ref: "#/responses/Unauthenticated"
         "404":
@@ -647,9 +659,12 @@ paths:
         "200":
           description: "Collection of exchanges of the buyer."
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Exchange"
+            type: "object"
+            properties:
+              items:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Exchange"
         "401":
           $ref: "#/responses/Unauthenticated"
         "404":
