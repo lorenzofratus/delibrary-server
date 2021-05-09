@@ -88,9 +88,9 @@ async function archive(exchange, new_status = status.REFUSED) {
 
   let paymentBookId;
   if (!exchange['payment']) paymentBookId = null;
-  else [{ bookId: paymentBookId }] = await sqlDb('properties')
-      .select('bookId')
-      .where({ id: exchange['payment'] });
+  else[{ bookId: paymentBookId }] = await sqlDb('properties')
+    .select('bookId')
+    .where({ id: exchange['payment'] });
 
   let [archivedExchange] = await sqlDb('archivedexchanges').insert({
     buyer: exchange['buyer'],
@@ -104,7 +104,7 @@ async function archive(exchange, new_status = status.REFUSED) {
     .where({ id: exchange['id'] })
     .del();
 
-  return archivedExchange
+  return archivedExchange;
 }
 
 async function get_final_exchange(exchange) {
@@ -309,9 +309,14 @@ exports.agreeExchange = async (id, body) => {
       return utils.respondWithCode(404)
     }
 
+    if(payment['status'] === status.AGREED) {
+      console.error(`You cannot use a property in agreed state as payment.`);
+      return utils.respondWithCode(400);
+    }
+
     if (payment['owner'] !== exchange['buyer']) {
-      console.error(`The exchange buyer is not the owner of the payment property.`)
-      return utils.respondWithCode(400)
+      console.error(`The exchange buyer is not the owner of the payment property.`);
+      return utils.respondWithCode(400);
     }
 
     if (exchange['status'] !== status.PROPOSED) {
@@ -319,14 +324,23 @@ exports.agreeExchange = async (id, body) => {
       return utils.respondWithCode(400);
     }
 
-    await sqlDb('exchanges')
+    let [updated_exchange] = await sqlDb('exchanges')
       .where({ id: id })
-      .update({ status: status.AGREED, payment: paymentId })
-
-    let updated_exchange = await sqlDb('exchanges').where({ id: id }).first()
+      .update({ status: status.AGREED, payment: paymentId }, '*')
 
     await putPropertyInAgreedState(updated_exchange['property'])
     await putPropertyInAgreedState(updated_exchange['payment'])
+
+    // Archive all the exchanges that involved properties of the current agreed exchange.
+    let otherExchangesWithGivenProperty = await sqlDb('exchanges')
+      .where({ property: updated_exchange['property'] })
+      .orWhere({ payment: updated_exchange['property'] })
+      .orWhere({ property: updated_exchange['payment'] })
+      .orWhere({ payment: updated_exchange['payment'] });
+
+    for (let otherExchange of otherExchangesWithGivenProperty)
+      if (JSON.stringify(exchange) === JSON.stringify(otherExchange))
+        await archive(otherExchange)
 
     console.log(`Exchange ${id} successfully updated as agreed.`)
     return utils.respondWithCode(201, updated_exchange)
