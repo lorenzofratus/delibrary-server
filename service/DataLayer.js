@@ -1,5 +1,5 @@
 let { usersDbSetup } = require("./UserService");
-let { exchangesDbSetup } = require("./ExchangeService");
+let { exchangesDbSetup, archivedExchangesDbSetup } = require("./ExchangeService");
 let { propertiesDbSetup } = require("./PropertyService");
 let { wishesDbSetup } = require("./WishService");
 
@@ -10,7 +10,7 @@ let sqlDb = knex({
     debug: true,
     /* For local work: 'DATABASE_URL=postgres://postgres:dana@localhost:5432/delibrarydb node index.js'
      * For Heroku, set the correct value of DATABASE_URL. See 'heroku config' */
-    connection: process.env.DATABASE_URL,
+    connection: process.env.DATABASE_URL || "postgres://postgres:dana@localhost:5433/delibrarydb",
     ssl: {
         require: false,
         rejectUnauthorized: false
@@ -24,6 +24,7 @@ function setupDataLayer() {
         usersDbSetup(sqlDb),
         propertiesDbSetup(sqlDb),
         exchangesDbSetup(sqlDb),
+        archivedExchangesDbSetup(sqlDb),
         wishesDbSetup(sqlDb)
     ]);
 }

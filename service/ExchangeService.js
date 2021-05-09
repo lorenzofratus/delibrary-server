@@ -2,7 +2,6 @@
 
 let sqlDb;
 var utils = require('../utils/writer.js');
-const { getUserProperty } = require('./PropertyService.js');
 var userService = require("./UserService.js");
 
 const status = {
@@ -20,6 +19,13 @@ exports.exchangesDbSetup = function (connection) {
   })
 }
 
+exports.archivedExchangesDbSetup = function(connection) {
+  return sqlDb.schema.hasTable('archivedexchanges').then(exists => {
+    if (!exists) return initArchivedExchangesTable()
+    else console.log("Table 'archivedexchanges' already exists.")
+  })
+}
+
 function initExchangesTable() {
   console.log("Table 'exchanges' does not exist. Creating it...");
   var exchanges = sqlDb.schema.createTable("exchanges", table => {
@@ -34,6 +40,22 @@ function initExchangesTable() {
   });
   console.log("Table 'exchanges' created.");
   return exchanges;
+}
+
+function initArchivedExchangesTable() {
+  console.log("Table 'archivedexchanges' does not exist. Creating it...");
+  let archivedExchangesTable = sqlDb.schema.createTable('archivedexchanges', table => {
+    table.increments('id').primary();
+    table.string('buyer').notNullable();
+    table.string('seller').notNullable();
+    table.string('propertyBookId').notNullable();
+    table.string('status').defaultTo(status.REFUSED);
+    table.string('paymentBookId');
+    table.foreign('buyer').references('users.username').onDelete('CASCADE');
+    table.foreign('seller').references('users.username').onDelete('CASCADE');
+  });
+  console.log("Table 'archivedexchanges' created.");
+  return archivedExchangesTable;
 }
 
 /**
@@ -56,8 +78,60 @@ function removePropertyFromAgreedState(propertyId) {
     .update({ isInAgreedExchange: false })
 }
 
+/**
+ * Archive all the Exchanges containing the Property with the given propertyId.
+ */
+exports.archiveExchangesContaining = async (propertyId) => {
+
+  let exchangesToBeArchived = await sqlDb('exchanges')
+    .where({ property: propertyId })
+    .orWhere({ payment: propertyId });
+
+  console.log(exchangesToBeArchived)
+
+  for (let exchange of exchangesToBeArchived){
+    console.log(exchange)
+    archive(exchange)
+  }
+}
+
+/**
+ * Archive the given Exchange.
+ * 'Archive an Exchange' means:
+ * 1. insert a new tuple archivedExchange table 'archivedexchanges'.
+ *  The status of this new Exchange is HAPPENED, if the status of the corresponding
+ *  Exchange is HAPPENED. Otherwise, it is REFUSED.
+ * 2. remove the Exchange from table 'exchanges'
+ */
+async function archive(exchange) {
+
+  let propertyBookId = await sqlDb('properties')
+    .select('bookId')
+    .where({ id: exchange['property'] })
+    .first();
+
+  let paymentBookId = await sqlDb('properties')
+    .select('bookId')
+    .where({ id: exchange['property'] })
+    .first();
+
+  let [archivedExchange] = await sqlDb('archivedexchanges').insert({
+    buyer: exchange['buyer'],
+    seller: exchange['seller'],
+    propertyBookId: propertyBookId,
+    paymentBookId: paymentBookId,
+    status: exchange['status'] === status.HAPPENED ? status.HAPPENED : status.REFUSED
+  }, '*')
+
+  await sqlDb('exchanges')
+    .where({ id: exchange['id'] })
+    .del();
+
+  return archivedExchange
+}
+
 async function get_final_exchange(exchange) {
-  
+
   let property = await sqlDb('properties').where({ id: exchange.property }).first()
   let payment = await sqlDb('properties').where({ id: exchange.payment }).first()
 
@@ -301,13 +375,8 @@ exports.happenedExchange = async (id) => {
       return utils.respondWithCode(400);
     }
 
-    await sqlDb('exchanges')
-      .where({ id: id })
-      .update({ status: status.HAPPENED })
-
-    let updated_exchange = await sqlDb('exchanges').where({ id: id }).first()
-    let property = await sqlDb('properties').where({ id: updated_exchange['property'] }).first()
-    let payment = await sqlDb('properties').where({ id: updated_exchange['payment'] }).first()
+    let property = await sqlDb('properties').where({ id: exchange['property'] }).first()
+    let payment = await sqlDb('properties').where({ id: exchange['payment'] }).first()
 
     await sqlDb('properties').where({ id: property['id'] }).update({
       owner: payment['owner'],
@@ -323,8 +392,10 @@ exports.happenedExchange = async (id) => {
       isInAgreedExchange: false
     })
 
+    let archivedExchange = await archive(exchange);
+
     console.log(`Exchange successfully updated.`)
-    return utils.respondWithCode(201, updated_exchange)
+    return utils.respondWithCode(201, archivedExchange)
   } catch (error) {
     console.error(error)
     return utils.respondWithCode(500)
@@ -341,22 +412,18 @@ exports.refuseExchange = async (id) => {
       return utils.respondWithCode(404)
     }
 
-    if (exchange['status'] === status.HAPPENED) {
+    if (exchange['status'] !== status.AGREED && exchange['status'] !== status.PROPOSED) {
       console.log(`You cannot modify the state of an exchange from 'happened' to 'refused'.`)
       return utils.respondWithCode(400);
     }
 
-    await sqlDb('exchanges')
-      .where({ id: id })
-      .update({ status: status.REFUSED })
+    await removePropertyFromAgreedState(exchange['property'])
+    if (exchange['payment']) await removePropertyFromAgreedState(exchange['payment'])
 
-    let updated_exchange = await sqlDb('exchanges').where({ id: id }).first()
+    let archivedExchange = await archive(exchange);
 
-    await removePropertyFromAgreedState(updated_exchange['property'])
-    if (updated_exchange['payment']) await removePropertyFromAgreedState(updated_exchange['payment'])
-
-    console.log(`Exchange ${id} successfully updated as refused.`)
-    return utils.respondWithCode(201, updatedExchange)
+    console.log(`Exchange successfully updated as refused.`)
+    return utils.respondWithCode(201, archivedExchange)
 
   } catch (error) {
     console.error(error)

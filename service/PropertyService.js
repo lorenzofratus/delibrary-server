@@ -2,6 +2,7 @@
 
 let sqlDb;
 var utils = require('../utils/writer.js');
+const { archiveExchangesContaining } = require('./ExchangeService.js');
 var userService = require("./UserService.js");
 
 exports.propertiesDbSetup = function (connection) {
@@ -27,45 +28,30 @@ function initInterestsTable() {
   return properties;
 }
 
-/**
- * Delete the property of the user with the given ID.
- *
- * username String Username of the user.
- * id Long ID of the property.
- * no response value expected for this operation
- **/
-exports.deleteUserProperty = function (username, id) {
-  return new Promise(function (resolve, reject) {
-    console.log("Deleting property from the database...")
+exports.deleteUserProperty = async (username, id) => {
 
-    return userService.findUser(username).then((foundUser) => {
-      if (!foundUser) {
-        console.error("No users with the given username")
-        return reject(utils.respondWithCode(404))
-      } else {
-        sqlDb('properties')
-          .where({ owner: username, id: id })
-          .first()
-          .then((user) => {
-            if (!user) {
-              console.error("No users with the given username")
-              return reject(utils.respondWithCode(404))
-            } else {
-              return sqlDb('properties')
-                .where({ owner: username, id: id })
-                .del()
-                .then(() => {
-                  console.log("Property " + id + " successfully deleted from the database.")
-                  return resolve(utils.respondWithCode(200))
-                }).catch((error) => {
-                  console.error(error)
-                  return reject(utils.respondWithCode(500))
-                })
-            }
-          })
-      }
-    })
-  });
+  try {
+
+    console.log(`Deleting property ${id} from the database...`)
+    let property = await sqlDb('properties').where({ id: id }).first();
+
+    if (!property) {
+      console.error(`No property found with id ${id}`);
+      return utils.respondWithCode(404);
+    }
+
+    await archiveExchangesContaining(id);
+
+    await sqlDb('properties')
+      .where({ id: id })
+      .del();
+
+    console.log(`Property ${id} successfully deleted from the database.`);
+    return utils.respondWithCode(200);
+  } catch (error) {
+    console.error(error);
+    return utils.respondWithCode(500);
+  }
 }
 
 
