@@ -755,7 +755,7 @@ paths:
         "201":
           description: "Exchange successfully refused."
           schema:
-            $ref: "#/definitions/Exchange"
+            $ref: "#/definitions/ArchivedExchange"
         "400":
           $ref: "#/responses/BadRequest"
         "401":
@@ -820,7 +820,7 @@ paths:
         "201":
           description: "Exchange successfully marked as 'happened'."
           schema:
-            $ref: "#/definitions/Exchange"
+            $ref: "#/definitions/ArchivedExchange"
         "400":
           $ref: "#/responses/BadRequest"
         "401":
