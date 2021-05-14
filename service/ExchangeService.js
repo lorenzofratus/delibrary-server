@@ -2,6 +2,7 @@
 
 let sqlDb;
 var utils = require('../utils/writer.js');
+const { get_final_archived_exchange } = require('./ArchivedExchangeService.js');
 var userService = require("./UserService.js");
 
 const status = {
@@ -104,7 +105,7 @@ async function archive(exchange, new_status = status.REFUSED) {
     .where({ id: exchange['id'] })
     .del();
 
-  return archivedExchange;
+  return await get_final_archived_exchange(archivedExchange);
 }
 
 async function get_final_exchange(exchange) {

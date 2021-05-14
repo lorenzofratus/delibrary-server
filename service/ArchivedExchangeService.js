@@ -35,6 +35,8 @@ function initArchivedExchangesTable() {
   return archivedExchangesTable;
 }
 
+exports.get_final_archived_exchange = (archived_exchange) => get_final_archived_exchange(archived_exchange);
+
 async function get_final_archived_exchange(archived_exchange) {
 
   let buyer = await sqlDb('users').where({ username: archived_exchange.buyer }).first();
@@ -80,7 +82,7 @@ exports.getArchivedUserExchangesBuyer = async (buyerUsername) => {
       .where({ buyer: buyerUsername });
 
     console.log(`Archived exchanges of buyer ${buyerUsername} retrieved.`);
-    return utils.respondWithCode(200, { "items": get_final_archived_exchanges(exchanges) });
+    return utils.respondWithCode(200, { "items": await get_final_archived_exchanges(exchanges) });
 
   } catch (error) {
     console.error(error);
@@ -111,7 +113,7 @@ exports.getArchivedUserExchangesSeller = async (sellerUsername) => {
       .where({ seller: sellerUsername });
 
     console.log(`Archived exchanges of seller ${sellerUsername} retrieved.`);
-    return utils.respondWithCode(200, { "items": get_final_archived_exchanges(exchanges) });
+    return utils.respondWithCode(200, { "items": await get_final_archived_exchanges(exchanges) });
 
   } catch (error) {
     console.error(error);
