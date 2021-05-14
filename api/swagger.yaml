@@ -942,9 +942,9 @@ definitions:
         type: "integer"
         format: "int64"
       buyer:
-        type: "string"
+        $ref: "#/definitions/User"
       seller:
-        type: "string"
+        $ref: "#/definitions/User"
       propertyBookId:
         type: "string"
       payment:
