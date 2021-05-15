@@ -344,7 +344,7 @@ exports.agreeExchange = async (id, body) => {
         await archive(otherExchange)
 
     console.log(`Exchange ${id} successfully updated as agreed.`)
-    return utils.respondWithCode(201, updated_exchange)
+    return utils.respondWithCode(201, await get_final_exchange(updated_exchange))
   } catch (error) {
     console.error(error)
     return utils.respondWithCode(500)
