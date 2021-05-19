@@ -326,6 +326,48 @@ paths:
         "500":
           $ref: "#/responses/ServerError"
       x-swagger-router-controller: "Wish"
+  /properties/{id}/position:
+    put:
+      tags:
+      - "Property"
+      summary: "Modify the position of a property."
+      operationId: "modifyPropertyPosition"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the property."
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          type: "object"
+          required:
+            - newProvince
+            - newTown
+          properties:
+            newProvince:
+              type: "string"
+            newTown:
+              type: "string"
+      responses:
+        "201":
+          description: "The updated property."
+          schema:
+            $ref: "#/definitions/Property"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthenticated"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/ServerError"
+      x-swagger-router-controller: "Property"
   /properties/{province}:
     get:
       tags:
@@ -781,6 +823,7 @@ paths:
         type: "integer"
       - in: "body"
         name: "body"
+        required: true
         schema:
           type: "object"
           required:

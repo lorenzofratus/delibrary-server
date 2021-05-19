@@ -263,3 +263,41 @@ exports.getPropertiesByProvince = function (province) {
       })
   });
 }
+
+/**
+ * Modify the position of a property.
+ *
+ * id Long ID of the property.
+ * body Body (required)
+ * returns Property
+ **/
+exports.modifyPropertyPosition = async (id, body) => {
+
+  try {
+    console.log(`Modifying position of property ${id}...`);
+
+    const property = await sqlDb('properties').where({ id: id }).first();
+    if (!property) {
+      console.error(`No property found with id ${id}.`);
+      return utils.respondWithCode(404);
+    }
+
+    const newProvince = body['newProvince'];
+    const newTown = body['newTown'];
+    if (!newProvince || !newTown) {
+      console.error(`No new province or new town specified.`);
+      return utils.respondWithCode(400);
+    }
+
+    const [updatedProperty] = await sqlDb('properties').where({ id: id }).update({
+      province: newProvince,
+      town: newTown
+    }, '*');
+
+    console.log(`Position of property ${id} successfully updated.`);
+    return utils.respondWithCode(201, updatedProperty);
+  } catch (error) {
+    console.log(error);
+    return utils.respondWithCode(500);
+  }
+}

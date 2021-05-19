@@ -72,3 +72,15 @@ module.exports.postUserProperty = function postUserProperty (req, res, next) {
       utils.writeJson(res, response);
     });
 };
+
+module.exports.modifyPropertyPosition = function modifyPropertyPosition (req, res, next) {
+  var id = req.swagger.params['id'].value;
+  var body = req.swagger.params['body'].value;
+  Property.modifyPropertyPosition(id,body)
+    .then(function (response) {
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, response);
+    });
+};
