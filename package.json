@@ -6,7 +6,9 @@
   "scripts": {
     "prestart": "npm install",
     "start": "node index.js",
-    "nodemon": "nodemon src/index.js"
+    "nodemon": "nodemon src/index.js",
+    "test": "mocha --timeout 100000",
+    "debug": "NODE_ENV=debug node index.js"
   },
   "keywords": [
     "swagger"
@@ -20,9 +22,15 @@
     "express-session": "^1.17.1",
     "js-yaml": "^3.3.0",
     "knex": "^0.21.14",
+    "morgan": "^1.10.0",
     "nodemon": "^2.0.6",
     "pg": "^8.5.1",
     "swagger-tools": "^0.10.4"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "mocha": "^8.4.0"
   },
   "engines": {
     "node": "15.x"

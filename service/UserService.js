@@ -99,9 +99,6 @@ exports.hidePassword = function (user) {
 exports.deleteUser = function (user, username) {
   return new Promise((resolve, reject) => {
 
-    if(user.username != username)
-      return reject(utils.respondWithCode(403));
-
     console.log("Deleting user " + username + " from the database...")
 
     return findUser(username).then((user) => {

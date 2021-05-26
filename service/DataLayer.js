@@ -8,7 +8,7 @@ const knex = require("knex");
 
 let sqlDb = knex({
     client: "pg",
-    debug: true,
+    debug: process.env.NODE_ENV === 'debug',
     /* For local work: 'DATABASE_URL=postgres://postgres:dana@localhost:5432/delibrarydb node index.js'
      * For Heroku, set the correct value of DATABASE_URL. See 'heroku config' */
     connection: process.env.DATABASE_URL || "postgres://postgres:dana@localhost:5433/delibrarydb",

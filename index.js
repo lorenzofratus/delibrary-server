@@ -1,13 +1,14 @@
 'use strict';
 
 var fs = require('fs'),
-  path = require('path'),
-  http = require('http');
+  path = require('path');
 
 var app = require('express')();
 var swaggerTools = require('swagger-tools');
 var jsyaml = require('js-yaml');
 const { setupDataLayer } = require('./service/DataLayer');
+
+let morgan = require('morgan');
 
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
@@ -15,8 +16,8 @@ const sessionLogger = require('./middlewares/SessionLogger');
 const checkLogin = require('./middlewares/CheckLogin');
 
 const openRoutes = [
-  "/v1/users/login", 
-  "/v1/users/login/me", 
+  "/v1/users/login",
+  "/v1/users/login/me",
   "/v1/users/new"
 ];
 
@@ -36,17 +37,23 @@ app.use(session({
   }
 }))
 
-const unless = function(pathList, middleware) {
-  return function(req, res, next) {
-      if (!req.path.startsWith('/v1') || pathList.includes(req.path)) {
-          return next();
-      } else {
-          return middleware(req, res, next);
-      }
+const unless = function (pathList, middleware) {
+  return function (req, res, next) {
+    if (!req.path.startsWith('/v1') || pathList.includes(req.path) || process.env.NODE_ENV === 'test') {
+      return next();
+    } else {
+      return middleware(req, res, next);
+    }
   };
 };
 
-app.use(sessionLogger);   //Displays the session at each request, for debugging purposes
+if (process.env.NODE_ENV === 'debug') {
+  app.use(sessionLogger);
+  app.use(morgan('tiny'));
+} else {
+  console.log = console.debug = console.warn = console.error = () => {};
+}
+
 app.use(unless(openRoutes, checkLogin));
 
 // swaggerRouter configuration
@@ -74,12 +81,11 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
 
   // Serve the Swagger documents and Swagger UI
   app.use(middleware.swaggerUi());
-
-  // Start the server
-  setupDataLayer().then(
-    () => http.createServer(app).listen(port, () =>
-      console.log(`Listening on port ${port}`))
-  )
 });
 
-module.exports = http;
+// Start the server
+(async () => await setupDataLayer())();
+const server = app.listen(port, () =>
+  console.log(`Listening on port ${port}`));
+
+module.exports = server;
