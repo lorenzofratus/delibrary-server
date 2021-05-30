@@ -1,3 +1,5 @@
+'use strict';
+
 process.env.NODE_ENV = 'test';
 let { database } = require("../service/DataLayer");
 let { server, chai, username_test, password_test } = require('./common');
@@ -50,7 +52,7 @@ describe('Tests', () => {
         });
     });
 
-    // TODO: removing the test user, also all its wishes, properties and active exchanges should be destoyed.
+    // TODO: removing the test user, also all its wishes, properties and active exchanges should be destoyed
 
     after((done) => {
         database.destroy();

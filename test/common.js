@@ -1,12 +1,13 @@
+'use strict';
+
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const should = chai.should();
+chai.use(chaiHttp);
 
 const bookId_test = "MNOPWJTvuxoC";
 const username_test = "nicheosala_test";
 const password_test = "veryStrongPassword";
-
-chai.use(chaiHttp);
 
 exports.chai = chai;
 exports.server = require("../index");

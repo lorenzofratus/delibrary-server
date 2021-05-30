@@ -1,3 +1,4 @@
+'use strict';
 
 let { server, chai, username_test, password_test } = require('../common');
 

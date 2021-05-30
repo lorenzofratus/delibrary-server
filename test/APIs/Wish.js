@@ -1,3 +1,5 @@
+'use strict';
+
 let { server, chai, username_test, bookId_test, wish_test } = require('../common');
 
 let wish_id = undefined;

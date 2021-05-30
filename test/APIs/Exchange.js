@@ -1,3 +1,5 @@
+'use strict';
+
 let { server, chai, username_test, password_test } = require('../common');
 
 describe('GET /users/{sellerUsername}/exchanges/active/seller', () => { });
