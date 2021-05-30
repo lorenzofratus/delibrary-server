@@ -9,7 +9,7 @@ function execute(name, path) {
 describe('Tests', () => {
 
     describe('POST /users/new', () => {
-        it("It should create a new test user", (done) => {
+        it("POST a new test user", (done) => {
             const user = {
                 surname: "Sala",
                 name: "Nicolò",
@@ -35,12 +35,12 @@ describe('Tests', () => {
     });
 
     execute('User test', './APIs/User');
-    // execute('Property test', './APIs/Property');
-    // execute('Wish test', './APIs/Wish');
-    // execute('Exchange test', './APIs/Exchange');
+    execute('Wish test', './APIs/Wish');
+    execute('Property test', './APIs/Property');
+    execute('Exchange test', './APIs/Exchange');
 
     describe('DELETE /users/{username}', () => {
-        it('It should DELETE the test user', (done) => {
+        it('DELETE the test user', (done) => {
             chai.request(server)
                 .delete(`/v1/users/${username_test}`)
                 .end((err, res) => {
@@ -49,6 +49,8 @@ describe('Tests', () => {
                 });
         });
     });
+
+    // TODO: removing the test user, also all its wishes, properties and active exchanges should be destoyed.
 
     after((done) => {
         database.destroy();

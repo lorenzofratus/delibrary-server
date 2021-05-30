@@ -125,7 +125,6 @@ exports.getUserProperty = function (username, id) {
   })
 }
 
-
 /**
  * Add a property for the user with the given username.
  *
@@ -133,75 +132,50 @@ exports.getUserProperty = function (username, id) {
  * username String Username of the user.
  * returns Property
  **/
-exports.postUserProperty = function (body, username) {
-  return new Promise(function (resolve, reject) {
-    console.log("Adding new property to the database...");
+exports.postUserProperty = async (body, username) => {
 
+  try {
     const book = body['book'];
     const position = body['position'];
-    const user = username;
-    const bookId = book['bookId'];
-    const province = position['province'].toLowerCase();
-    const town = position['town'].toLowerCase();
 
-    if (!user || !bookId || !town || !province) {
-      console.error("Property not added: not nullable field is empty.")
-      return reject(utils.respondWithCode(400))
+    if (!book || !position || !username)
+      return utils.respondWithCode(400);
+
+    const bookId = book['bookId'];
+    let province = position['province'];
+    let town = position['town'];
+
+    if (!bookId || !town || !province)
+      return utils.respondWithCode(400);
+
+    province = province.toLowerCase();
+    town = town.toLowerCase();
+
+    if (!(await userService.findUser(username)))
+      return utils.respondWithCode(404);
+
+    if (await sqlDb('wishes').where({ user: username, bookId: bookId }).first()) {
+      console.error("The book is currently a wish of the user, so it has not been added as a property.");
+      return utils.respondWithCode(406);
     }
 
-    // Check if the property is already stored.
-    return userService.findUser(username).then((foundUser) => {
-      if (!foundUser) {
-        console.error("No users with the given username")
-        return reject(utils.respondWithCode(404))
-      } else {
-        return sqlDb('wishes')
-          .where({ user: user, bookId: bookId })
-          .first()
-          .then((wish) => {
-            if (wish) {
-              console.log("The book is currently a wish of the user, so it has not been added as a property.")
-              return reject(utils.respondWithCode(406))
-            } else {
-              return sqlDb('properties')
-                .where({ owner: user, bookId: bookId, town: town, province: province })
-                .first()
-                .then((property) => {
-                  if (property) {
-                    console.error("The property is already inside the database.")
-                    return reject(utils.respondWithCode(409))
-                  } else {
-                    return sqlDb('properties').insert({
-                      owner: user,
-                      bookId: bookId,
-                      town: town,
-                      province: province
-                    }).then(() => {
-                      console.log(`Property successfully added to the database.`)
-                      return sqlDb('properties')
-                        .where({
-                          owner: user,
-                          bookId: bookId,
-                          town: town,
-                          province: province
-                        })
-                        .first()
-                        .then((property) => {
-                          return resolve(utils.respondWithCode(201, property))
-                        })
-                    }).catch((error) => {
-                      console.error("ERROR: " + error)
-                      return reject(utils.respondWithCode(500))
-                    });
-                  }
-                })
-            }
-          })
-      }
-    })
-  })
-}
+    if (await sqlDb('properties').where({ owner: username, bookId: bookId, town: town, province: province }).first()) {
+      console.error("The property is already inside the database.");
+      return utils.respondWithCode(409);
+    }
 
+    const [property] = await sqlDb('properties').insert({
+      owner: username,
+      bookId: bookId,
+      town: town,
+      province: province
+    }, '*');
+
+    return utils.respondWithCode(201, property);
+  } catch (error) {
+    return utils.respondWithCode(500);
+  }
+}
 
 /**
  * Get all the properties in a given town.
@@ -284,6 +258,7 @@ exports.modifyPropertyPosition = async (id, body) => {
 
     const newProvince = body['newProvince'];
     const newTown = body['newTown'];
+    
     if (!newProvince || !newTown) {
       console.error(`No new province or new town specified.`);
       return utils.respondWithCode(400);

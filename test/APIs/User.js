@@ -2,7 +2,7 @@
 let { server, chai, username_test, password_test } = require('../common');
 
 describe('GET /users/login', () => {
-    it('It should login with the test user.', (done) => {
+    it('GET Login with the test user', (done) => {
         chai.request(server)
             .get(`/v1/users/login?username=${username_test}&password=${password_test}`)
             .end((err, res) => {
@@ -13,9 +13,9 @@ describe('GET /users/login', () => {
 });
 
 describe('GET /users', () => {
-    it('It should GET all the users', (done) => {
+    it('GET all the users', (done) => {
         chai.request(server)
-            .get('/v1/users') // TODO set default route == v1/
+            .get('/v1/users')
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
@@ -25,7 +25,7 @@ describe('GET /users', () => {
 });
 
 describe('GET /users/{username}', () => {
-    it('It should GET the test user', (done) => {
+    it('GET the test user', (done) => {
         chai.request(server)
             .get(`/v1/users/${username_test}`)
             .end((err, res) => {

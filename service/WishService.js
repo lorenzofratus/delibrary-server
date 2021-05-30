@@ -31,28 +31,21 @@ function initWishesTable() {
  * id Long ID of the wish.
  * no response value expected for this operation
  **/
-exports.deleteUserWish = function (username, id) {
-  return new Promise(function (resolve, reject) {
-    console.log("Deleting wish from the database...")
+exports.deleteUserWish = async (username, id) => {
+  try {
+    const [wish] = await sqlDb('wishes')
+      .where({ id: id, user: username })
+      .returning('*')
+      .del();
 
-    return userService.findUser(username).then((user) => {
-      if (!user) {
-        console.error("No users with the given username")
-        return reject(utils.respondWithCode(404))
-      } else {
-        return sqlDb('wishes')
-          .where({ id: id })
-          .del()
-          .then(() => {
-            console.log("Wish " + id + " successfully deleted from the database.")
-            return resolve(utils.respondWithCode(200))
-          }).catch((error) => {
-            console.error(error)
-            return reject(utils.respondWithCode(500))
-          })
-      }
-    })
-  });
+    if (!wish)
+      return utils.respondWithCode(404);
+    else
+      return utils.respondWithCode(200);
+
+  } catch (error) {
+    return utils.respondWithCode(500);
+  }
 }
 
 
@@ -63,35 +56,19 @@ exports.deleteUserWish = function (username, id) {
  * id Long ID of the wish.
  * returns Wish
  **/
-exports.getUserWish = function (username, id) {
-  return new Promise(function (resolve, reject) {
-    console.log("Looking for wish " + id)
+exports.getUserWish = async (username, id) => {
+  try {
+    if (!(userService.findUser(username)))
+      return utils.respondWithCode(404);
 
-    return userService.findUser(username).then((user) => {
-      if (!user) {
-        console.error("No users with the given username")
-        return reject(utils.respondWithCode(404))
-      } else {
-        return sqlDb('wishes')
-          .where({ user: username, id: id })
-          .first()
-          .then((wish) => {
-            if (!wish) {
-              console.log("There are no wish with the given username and id.")
-              return reject(utils.respondWithCode(404))
-            } else {
-              console.log("Wish found.")
-              return resolve(utils.respondWithCode(200, wish))
-            }
-          })
-          .catch((error) => {
-            console.error(error)
-            return reject(utils.respondWithCode(500))
-          })
-      }
-    })
+    const wish = await sqlDb('wishes').where({ user: username, id: id }).first();
+    if (!wish) return utils.respondWithCode(404);
 
-  });
+    return utils.respondWithCode(200, wish);
+
+  } catch (error) {
+    return utils.respondWithCode(500);
+  }
 }
 
 
@@ -101,31 +78,18 @@ exports.getUserWish = function (username, id) {
  * username String Username of the user whose wishes are to be obtained.
  * returns List
  **/
-exports.getUserWishes = function (username) {
-  return new Promise(function (resolve, reject) {
-    console.log("Returning all the wishes of " + username + ".")
-    return userService.findUser(username).then((user) => {
-      if (!user) {
-        console.log("There are no user with the given username.")
-        return reject(utils.respondWithCode(404))
-      } else {
-        return sqlDb('wishes')
-          .where({ user: username })
-          .then((wishes) => {
-            console.log("Returning wishes.")
-            return resolve(utils.respondWithCode(200, wishes));
-          })
-          .catch((error) => {
-            console.error(error)
-            reject(utils.respondWithCode(500))
-          })
-      }
-    })
-      .catch((error) => {
-        console.error(error)
-        return reject(utils.respondWithCode(500))
-      })
-  })
+exports.getUserWishes = async (username) => {
+  try {
+
+    if (!(userService.findUser(username)))
+      return utils.respondWithCode(404);
+
+    const wishes = await sqlDb('wishes').where({ user: username });
+    return utils.respondWithCode(200, wishes);
+
+  } catch (error) {
+    return utils.respondWithCode(500);
+  }
 }
 
 
@@ -136,64 +100,31 @@ exports.getUserWishes = function (username) {
  * username String Username of the user.
  * returns Wish
  **/
-exports.postUserWish = function (body, username) {
-  return new Promise(function (resolve, reject) {
-    console.log("Adding new wish to the database...");
 
-    const user = username;
+exports.postUserWish = async (body, username) => {
+
+  try {
     const bookId = body['bookId'];
 
-    if (!user || !bookId) {
-      console.error("Wish not added: empty user or bookId.")
-      return reject(utils.respondWithCode(400))
-    }
+    if (!username || !bookId)
+      return utils.respondWithCode(400);
 
-    // Check if the wish is already stored.
-    return userService.findUser(username).then((userFound) => {
-      if (!userFound) {
-        console.error("No users with the given username")
-        return reject(utils.respondWithCode(404))
-      } else {
-        return sqlDb('properties')
-          .where({ owner: user, bookId: bookId })
-          .first()
-          .then((property) => {
-            if (property) {
-              console.log("The book is currently a property of the user, so it has not been added as a wish.")
-              return reject(utils.respondWithCode(406))
-            } else {
-              return sqlDb('wishes')
-                .where({ user: user, bookId: bookId })
-                .first()
-                .then((wish) => {
-                  if (wish) {
-                    console.error("There's already a wish with for the given bookId and username.")
-                    return reject(utils.respondWithCode(409))
-                  } else {
-                    return sqlDb('wishes').insert({
-                      user: user,
-                      bookId: bookId
-                    }).then(() => {
-                      console.log(`Wish successfully added to the database.`)
-                      return sqlDb('wishes')
-                        .where({ user: user, bookId: bookId })
-                        .first()
-                        .then((wish) => {
-                          return resolve(utils.respondWithCode(201, wish))
-                        })
-                    }).catch((error) => {
-                      console.error("ERROR: " + error)
-                      return reject(utils.respondWithCode(500))
-                    });
-                  }
-                }).catch((error) => {
-                  console.error("ERROR: " + error)
-                  return reject(utils.respondWithCode(500))
-                })
-            }
-          })
-      }
-    })
-  })
+    if (!(await userService.findUser(username)))
+      return utils.respondWithCode(404);
+
+    if (await sqlDb('properties').where({ owner: username, bookId: bookId }).first())
+      return utils.respondWithCode(406);
+
+    if (await sqlDb('wishes').where({ user: username, bookId: bookId }).first())
+      return utils.respondWithCode(409);
+
+    const [wish] = await sqlDb('wishes').insert({
+      user: username,
+      bookId: bookId
+    }, '*');
+
+    return utils.respondWithCode(201, wish);
+  } catch (error) {
+    return utils.respondWithCode(500);
+  }
 }
-
