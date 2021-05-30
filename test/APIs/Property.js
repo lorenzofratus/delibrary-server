@@ -1,33 +1,31 @@
 'use strict';
 
-let { server, chai, username_test, bookId_test, wish_test, property_test } = require('../common');
-
-let property_id = undefined;
+let { server, chai, property_test, book_and_position } = require('../common');
 
 describe('POST /users/{username}/properties/new', () => {
     it("POST a new property", (done) => {
         chai.request(server)
-            .post(`/v1/users/${username_test}/properties/new`)
-            .send(property_test)
+            .post(`/v1/users/${property_test.owner}/properties/new`)
+            .send(book_and_position)
             .end((err, res) => {
                 res.should.have.status(201);
                 res.body.should.be.a('object');
                 res.body.should.have.property('id').not.eql(null);
-                res.body.should.have.property('owner').eql(username_test);
-                res.body.should.have.property('bookId').eql(bookId_test);
-                res.body.should.have.property('town').eql(property_test.position.town.toLowerCase());
-                res.body.should.have.property('province').eql(property_test.position.province.toLowerCase());
+                res.body.should.have.property('owner').eql(property_test.owner);
+                res.body.should.have.property('bookId').eql(property_test.bookId);
+                res.body.should.have.property('town').eql(property_test.town.toLowerCase());
+                res.body.should.have.property('province').eql(property_test.province.toLowerCase());
                 res.body.should.have.property('isInAgreedExchange').eql(false);
-                property_id = res.body.id;
+                property_test.id = res.body.id;
                 done();
             });
     });
 
     it("BAD POST a new property without body properties 'book' and 'province'", (done) => {
         chai.request(server)
-            .post(`/v1/users/${username_test}/properties/new`)
+            .post(`/v1/users/${property_test.owner}/properties/new`)
             .send({
-                bookId: bookId_test,
+                bookId: property_test.bookId,
                 town: 'osnago',
                 province: 'lecco'
             })
@@ -39,7 +37,7 @@ describe('POST /users/{username}/properties/new', () => {
 
     it("BAD POST a new property without body properties 'bookId' and 'town'", (done) => {
         chai.request(server)
-            .post(`/v1/users/${username_test}/properties/new`)
+            .post(`/v1/users/${property_test.owner}/properties/new`)
             .send({
                 book: {},
                 position: {}
@@ -52,8 +50,8 @@ describe('POST /users/{username}/properties/new', () => {
 
     it("BAD POST a new property with the exact same owner, bookId, town, province of a previous one", (done) => {
         chai.request(server)
-            .post(`/v1/users/${username_test}/properties/new`)
-            .send(property_test)
+            .post(`/v1/users/${property_test.owner}/properties/new`)
+            .send(book_and_position)
             .end((err, res) => {
                 res.should.have.status(409);
                 done();
@@ -68,14 +66,14 @@ describe('PUT /properties/{id}/position', () => {
         const newTown = 'bergamo';
 
         chai.request(server)
-            .put(`/v1/properties/${property_id}/position`)
+            .put(`/v1/properties/${property_test.id}/position`)
             .send({newProvince : newProvince, newTown: newTown})
             .end((err, res) => {
                 res.should.have.status(201);
                 res.body.should.be.a('object');
                 res.body.should.have.property('id').not.eql(null);
-                res.body.should.have.property('owner').eql(username_test);
-                res.body.should.have.property('bookId').eql(bookId_test);
+                res.body.should.have.property('owner').eql(property_test.owner);
+                res.body.should.have.property('bookId').eql(property_test.bookId);
                 res.body.should.have.property('town').eql(newProvince.toLowerCase());
                 res.body.should.have.property('province').eql(newTown.toLowerCase());
                 res.body.should.have.property('isInAgreedExchange').eql(false);
@@ -86,7 +84,7 @@ describe('PUT /properties/{id}/position', () => {
     it("BAD PUT a new position with no values for newProvince and newTown", (done) => {
 
         chai.request(server)
-            .put(`/v1/properties/${property_id}/position`)
+            .put(`/v1/properties/${property_test.id}/position`)
             .send({})
             .end((err, res) => {
                 res.should.have.status(400);
@@ -103,7 +101,7 @@ describe('GET /users/{username}/properties/{id}', () => { /* TODO */ });
 describe('DELETE /users/{username}/properties/{id}', () => {
     it('DELETE the test property', (done) => {
         chai.request(server)
-            .delete(`/v1/users/${username_test}/properties/${property_id}`)
+            .delete(`/v1/users/${property_test.owner}/properties/${property_test.id}`)
             .end((err, res) => {
                 res.should.have.status(200);
                 done();
@@ -112,7 +110,7 @@ describe('DELETE /users/{username}/properties/{id}', () => {
 
     it('BAD DELETE a property with a non valid ID.', (done) => {
         chai.request(server)
-            .delete(`/v1/users/${username_test}/properties/-1`)
+            .delete(`/v1/users/${property_test.owner}/properties/-1`)
             .end((err, res) => {
                 res.should.have.status(404);
                 done();

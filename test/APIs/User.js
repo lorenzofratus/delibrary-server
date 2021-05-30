@@ -1,11 +1,11 @@
 'use strict';
 
-let { server, chai, username_test, password_test } = require('../common');
+let { server, chai, user_test} = require('../common');
 
 describe('GET /users/login', () => {
     it('GET Login with the test user', (done) => {
         chai.request(server)
-            .get(`/v1/users/login?username=${username_test}&password=${password_test}`)
+            .get(`/v1/users/login?username=${user_test.username}&password=${user_test.password}`)
             .end((err, res) => {
                 res.should.have.status(200);
                 done();
@@ -28,7 +28,7 @@ describe('GET /users', () => {
 describe('GET /users/{username}', () => {
     it('GET the test user', (done) => {
         chai.request(server)
-            .get(`/v1/users/${username_test}`)
+            .get(`/v1/users/${user_test.username}`)
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');

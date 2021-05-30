@@ -2,7 +2,7 @@
 
 process.env.NODE_ENV = 'test';
 let { database } = require("../service/DataLayer");
-let { server, chai, username_test, password_test } = require('./common');
+let { server, chai, user_test } = require('./common');
 
 function execute(name, path) {
     describe(name, () => require(path));
@@ -12,17 +12,10 @@ describe('Tests', () => {
 
     describe('POST /users/new', () => {
         it("POST a new test user", (done) => {
-            const user = {
-                surname: "Sala",
-                name: "Nicolò",
-                email: "nicolo.sala@domain.org",
-                username: username_test,
-                password: password_test
-            }
 
             chai.request(server)
                 .post('/v1/users/new')
-                .send(user)
+                .send(user_test)
                 .end((err, res) => {
                     res.should.have.status(201);
                     res.body.should.be.a('object');
@@ -44,7 +37,7 @@ describe('Tests', () => {
     describe('DELETE /users/{username}', () => {
         it('DELETE the test user', (done) => {
             chai.request(server)
-                .delete(`/v1/users/${username_test}`)
+                .delete(`/v1/users/${user_test.username}`)
                 .end((err, res) => {
                     res.should.have.status(200);
                     done();

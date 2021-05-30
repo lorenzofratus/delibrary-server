@@ -1,6 +1,7 @@
 'use strict';
 
 let sqlDb;
+const { property_test } = require('../test/common.js');
 var utils = require('../utils/writer.js');
 const { get_final_archived_exchange } = require('./ArchivedExchangeService.js');
 var userService = require("./UserService.js");
@@ -194,7 +195,7 @@ exports.getUserExchanges = function (username) {
             return get_final_exchanges(exchanges)
               .then((final_exchanges) => {
                 console.log("Returning exchanges");
-                return resolve(utils.respondWithCode(200, { "items" : final_exchanges }));
+                return resolve(utils.respondWithCode(200, { "items": final_exchanges }));
               })
 
           })
@@ -211,7 +212,6 @@ exports.getUserExchanges = function (username) {
   })
 }
 
-
 /**
  * Add a exchange for the user with the given username.
  *
@@ -219,77 +219,49 @@ exports.getUserExchanges = function (username) {
  * username String Username of the user.
  * returns Exchange
  **/
-exports.postUserExchange = function (body, buyerUsername) {
-  return new Promise(function (resolve, reject) {
-    console.log("Adding new exchange to the database...");
+exports.postUserExchange = async (body, buyerUsername) => {
 
-    const sellerUsername = body['sellerUsername'];
-    const propertyId = body['propertyId'];
+  try {
+    const sellerUsername = body.sellerUsername;
+    const propertyId = body.propertyId;
 
-    console.log("buyerUsername: " + buyerUsername)
-    console.log("PropertyId: " + propertyId)
-    console.log("SellerUsername: " + sellerUsername)
-    if (!buyerUsername || propertyId < 0 || !sellerUsername) {
-      console.error("Exchange not added: not nullable field is empty.")
-      return reject(utils.respondWithCode(400))
+    if (!buyerUsername || !sellerUsername || !propertyId) {
+      console.error("buyer: " + buyerUsername);
+      console.error("seller: " + sellerUsername);
+      console.error("prop: " + propertyId);
+      console.error("Exchange not added: not nullable field is empty.");
+      return utils.respondWithCode(400);
     }
 
     if (buyerUsername === sellerUsername) {
-      console.error("Exchange not added: buyer and seller usernames cannot be the same.")
-      return reject(utils.respondWithCode(400))
+      console.error("Exchange not added: buyer and seller usernames cannot be the same.");
+      return utils.respondWithCode(400);
     }
 
-    return sqlDb('properties')
-      .where({ owner: sellerUsername, id: propertyId })
-      .first()
-      .then((property) => {
-        if (!property) {
-          console.error("The specified property does not belong to the specified seller.")
-          return reject(utils.respondWithCode(400))
-        } else {
-          // Check if the exchange is already stored.
-          return userService.findUser(buyerUsername).then((userFound) => {
-            if (!userFound) {
-              console.error("No users with the given username")
-              return reject(utils.respondWithCode(404))
-            } else {
-              return sqlDb('exchanges')
-                .where({ buyer: buyerUsername, seller: sellerUsername, property: propertyId })
-                .first()
-                .then((exchange) => {
-                  if (exchange) {
-                    console.error("There's already a exchange with for the given propertyId and seller and buyer.")
-                    return reject(utils.respondWithCode(409))
-                  } else {
-                    return sqlDb('exchanges').insert({
-                      buyer: buyerUsername,
-                      seller: sellerUsername,
-                      property: propertyId
-                    }).then(() => {
-                      console.log(`Exchange successfully added to the database.`)
-                      return sqlDb('exchanges')
-                        .where({ buyer: buyerUsername, property: propertyId })
-                        .first()
-                        .then((exchange) => {
-                          return get_final_exchange(exchange)
-                            .then((final_exchange) => {
-                              return resolve(utils.respondWithCode(201, final_exchange));
-                            })
-                        })
-                    }).catch((error) => {
-                      console.error("ERROR: " + error)
-                      return reject(utils.respondWithCode(500))
-                    });
-                  }
-                }).catch((error) => {
-                  console.error("ERROR: " + error)
-                  return reject(utils.respondWithCode(500))
-                })
-            }
-          })
-        }
-      })
-  })
+    if (!(await sqlDb('properties').where({ owner: sellerUsername, id: propertyId }).first())) {
+      console.error("The specified property does not belong to the specified seller.");
+      return utils.respondWithCode(400);
+    }
+
+    if (!(await userService.findUser(buyerUsername)) || !(await userService.findUser(sellerUsername)))
+      return utils.respondWithCode(404);
+
+    if (await sqlDb('exchanges').where({ buyer: buyerUsername, seller: sellerUsername, property: propertyId }).first()) {
+      console.error("There's already a exchange with for the given propertyId and seller and buyer.");
+      return utils.respondWithCode(409);
+    }
+
+    const [exchange] = await sqlDb('exchanges').insert({
+      buyer: buyerUsername,
+      seller: sellerUsername,
+      property: propertyId
+    }, '*');
+
+    return utils.respondWithCode(201, exchange);
+  } catch (error) {
+    console.error(error);
+    return utils.respondWithCode(500);
+  }
 }
 
 exports.agreeExchange = async (id, body) => {
@@ -310,7 +282,7 @@ exports.agreeExchange = async (id, body) => {
       return utils.respondWithCode(404)
     }
 
-    if(payment['status'] === status.AGREED) {
+    if (payment['status'] === status.AGREED) {
       console.error(`You cannot use a property in agreed state as payment.`);
       return utils.respondWithCode(400);
     }
@@ -437,7 +409,7 @@ exports.getUserExchangesSeller = function getUserExchangesSeller(sellerUsername)
             return get_final_exchanges(exchanges)
               .then((final_exchanges) => {
                 console.log("Exchanges of user as seller returned.");
-                return resolve(utils.respondWithCode(200, { "items" : final_exchanges }));
+                return resolve(utils.respondWithCode(200, { "items": final_exchanges }));
               })
 
           })
@@ -468,7 +440,7 @@ exports.getUserExchangesBuyer = function getUserExchangesBuyer(buyerUsername) {
             return get_final_exchanges(exchanges)
               .then((final_exchanges) => {
                 console.log("Exchanges of user as buyer returned.");
-                return resolve(utils.respondWithCode(200, { "items" : final_exchanges }));
+                return resolve(utils.respondWithCode(200, { "items": final_exchanges }));
               })
           })
           .catch((error) => {
