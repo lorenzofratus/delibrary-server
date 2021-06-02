@@ -67,7 +67,7 @@ describe('PUT /properties/{id}/position', () => {
 
         chai.request(server)
             .put(`/v1/properties/${property_test.id}/position`)
-            .send({newProvince : newProvince, newTown: newTown})
+            .send({ newProvince: newProvince, newTown: newTown })
             .end((err, res) => {
                 res.should.have.status(201);
                 res.body.should.be.a('object');
@@ -92,11 +92,6 @@ describe('PUT /properties/{id}/position', () => {
             });
     });
 });
-
-describe('GET /properties/{province}', () => { /* TODO */ });
-describe('GET /properties/{province}/{town}', () => { /* TODO */ });
-describe('GET /users/{username}/properties', () => { /* TODO */ });
-describe('GET /users/{username}/properties/{id}', () => { /* TODO */ });
 
 describe('DELETE /users/{username}/properties/{id}', () => {
     it('DELETE the test property', (done) => {

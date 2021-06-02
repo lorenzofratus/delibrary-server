@@ -167,7 +167,6 @@ exports.getUserByUsername = function (username) {
  *
  * returns List
  **/
-// TODO unusued function. Should we remove it?
 exports.getUsers = function () {
   return new Promise(function (resolve, reject) {
     console.log("Returning all the users inside the database.")

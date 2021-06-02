@@ -50,7 +50,9 @@ const unless = function (pathList, middleware) {
 if (process.env.NODE_ENV === 'debug') {
   app.use(sessionLogger);
   app.use(morgan('tiny'));
-} else {
+}
+
+if (process.env.NODE_ENV === 'test') {
   console.log = console.debug = console.warn = console.error = () => {};
 }
 

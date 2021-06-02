@@ -990,7 +990,7 @@ definitions:
         $ref: "#/definitions/User"
       propertyBookId:
         type: "string"
-      payment:
+      paymentBookId:
         type: "string"
       status:
         type: "string"

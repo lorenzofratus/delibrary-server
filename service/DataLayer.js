@@ -6,12 +6,12 @@ let { archivedExchangesDbSetup } = require("./ArchivedExchangeService");
 
 const knex = require("knex");
 
+const conn = process.env.DATABASE_URL || (process.env.NODE_ENV === 'test' ? "postgres://postgres:dana@localhost:5433/delibrarydbtest" : "postgres://postgres:dana@localhost:5433/delibrarydb");
+
 let sqlDb = knex({
     client: "pg",
     debug: process.env.NODE_ENV === 'debug',
-    /* For local work: 'DATABASE_URL=postgres://postgres:dana@localhost:5432/delibrarydb node index.js'
-     * For Heroku, set the correct value of DATABASE_URL. See 'heroku config' */
-    connection: process.env.DATABASE_URL || "postgres://postgres:dana@localhost:5433/delibrarydb",
+    connection: conn,
     ssl: {
         require: false,
         rejectUnauthorized: false

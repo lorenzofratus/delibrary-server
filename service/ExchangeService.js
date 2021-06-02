@@ -1,7 +1,6 @@
 'use strict';
 
 let sqlDb;
-const { property_test } = require('../test/common.js');
 var utils = require('../utils/writer.js');
 const { get_final_archived_exchange } = require('./ArchivedExchangeService.js');
 var userService = require("./UserService.js");
@@ -12,6 +11,8 @@ const status = {
   AGREED: 'agreed',
   HAPPENED: 'happened'
 }
+
+exports.status = status;
 
 exports.exchangesDbSetup = function (connection) {
   sqlDb = connection;
@@ -226,9 +227,6 @@ exports.postUserExchange = async (body, buyerUsername) => {
     const propertyId = body.propertyId;
 
     if (!buyerUsername || !sellerUsername || !propertyId) {
-      console.error("buyer: " + buyerUsername);
-      console.error("seller: " + sellerUsername);
-      console.error("prop: " + propertyId);
       console.error("Exchange not added: not nullable field is empty.");
       return utils.respondWithCode(400);
     }

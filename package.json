@@ -7,7 +7,7 @@
     "prestart": "npm install",
     "start": "node index.js",
     "nodemon": "nodemon src/index.js",
-    "test": "mocha --timeout 100000",
+    "test": "NODE_ENV=test mocha --timeout 1000",
     "debug": "NODE_ENV=debug node index.js"
   },
   "keywords": [
