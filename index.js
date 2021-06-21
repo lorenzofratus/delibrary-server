@@ -47,7 +47,7 @@ const unless = function (pathList, middleware) {
   };
 };
 
-if (process.env.NODE_ENV === 'debug') {
+if (process.env.NODE_ENV !== 'test') {
   app.use(sessionLogger);
   app.use(morgan('tiny'));
 }

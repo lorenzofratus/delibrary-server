@@ -19,7 +19,7 @@ DELETE FROM archivedexchanges;
 
 INSERT INTO users("username", "name", "surname", "email", "password") VALUES
     ('nicheosala', 'Nicolò', 'Sala', 'nicolo@delibrary.com', '#Delibrary03'),
-    -- ('fratus', 'Lorenzo', 'Fratus', 'lorenzo@delibrary.com', '#Delibrary03'),
+    ('fratus', 'Lorenzo', 'Fratus', 'lorenzo@delibrary.com', '#Delibrary03'),
     ('jst_greg', 'Gregorio', 'Ferraresi', 'gregorio@delibrary.com', '#Delibrary03'),
     ('teo', 'Matteo', 'Fruscalzo', 'matteo@delibrary.com', '#Delibrary03');
 
@@ -42,7 +42,7 @@ INSERT INTO properties("id", "owner", "bookId", "town", "province") VALUES
     (53, 'teo', 'h0kQEAAAQBAJ', 'arcore', 'monza e della brianza');
 
 INSERT INTO wishes("user", "bookId") VALUES
-    -- ('fratus', 'rL4bAQAAIAAJ'),
+    ('fratus', 'VuujDwAAQBAJ'),
     -- ('fratus', '2NBtEj5gSpUC'),
     ('nicheosala', '2NBtEj5gSpUC'),
     ('nicheosala', 'nrd6twAACAAJ');
