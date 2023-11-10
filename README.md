@@ -9,7 +9,7 @@
   <p align="center">
     Project developed for the final exam of the course named <em>Design and Implementation of Mobile Applications</em> held by Professor Luciano Baresi at <em>Politecnico di Milano</em>.
     <br />
-    <a href="https://github.com/lorenzofratus/delibrary-server"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/lorenzofratus/delibrary"><strong>Explore the docs »</strong></a>
   </p>
 </p>
 
