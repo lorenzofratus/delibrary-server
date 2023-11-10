@@ -22,7 +22,7 @@
       <ul>
         <li><a href="#built-with">Built With</a></li>
       </ul>
-    </li>lorenzofratus/Delibrary
+    </li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
@@ -48,7 +48,7 @@ At the moment, Delibrary has been developed for the Italian market, for this rea
 
 The frontend is a mobile application built with _Flutter_ and _Dart_.
 
-The code of the frontend can be found at this [link](https://github.com/nicheosala/delibrary).
+The code of the frontend can be found at this [link](https://github.com/lorenzofratus/delibrary-server).
 
 ### Built With
 
